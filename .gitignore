@@ -1,0 +1,47 @@
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio specific folders
+.vs/
+
+# ASP.NET Core settings (optional: you might want to keep appsettings.json)
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# Publish results
+publish/
+wwwroot/
+
+# Logs and diagnostic results
+*.log
+
+# Resharper and JetBrains Rider
+_ReSharper*/
+*.DotSettings.user
+.idea/
+
+# VS Code
+.vscode/
+
+# Others
+*.db
+*.sqlite
+*.cache
+*.tmp
+Thumbs.db
+.DS_Store
+
+# Entity Framework migrations (optional, if you're auto-generating them)
+Migrations/
+
+# NuGet packages
+*.nupkg
+packages/
