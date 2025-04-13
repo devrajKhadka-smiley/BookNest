@@ -1,6 +1,26 @@
-﻿namespace BookNest.Controllers
+﻿using BookNest.Data;
+using BookNest.Data.Entities;
+using Microsoft.AspNetCore.Mvc;
+
+namespace BookNest.Controllers
 {
-    public class UserController
+    [Route("api/controller")]
+    [ApiController]
+    public class UserController: ControllerBase
     {
+        private readonly AppDbContext dbContext;
+
+        public UserController (AppDbContext dbContext)
+        {
+            this.dbContext = dbContext;
+        }
+
+        [HttpPost]
+        public IActionResult Adduser(User user)
+        {
+            dbContext.Users.Add(user);
+            dbContext.SaveChanges();
+            return Ok(user);
+        }
     }
 }
