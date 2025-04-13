@@ -16,7 +16,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost]
-        public IActionResult Adduser(User user)
+        public IActionResult AddUser(User user)
         {
             dbContext.Users.Add(user);
             dbContext.SaveChanges();
