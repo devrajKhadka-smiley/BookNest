@@ -50,13 +50,12 @@ namespace BookNest.Controllers
                 user.Password = std.Password;
                 user.FullName = std.FullName;
                 user.UserName = std.UserName;
-                user.Role = std.Role;
+                user.UserType = std.UserType;
 
                 dbContext.SaveChanges();
                 return Ok(user);
             }
             return NotFound("Khai id nai veteyena");
         }
-
     }
 }

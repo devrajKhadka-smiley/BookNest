@@ -1,31 +1,34 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace BookNest.Data.Entities
 {
+    [Index(nameof(Email), IsUnique = true)]
+    [Index(nameof(UserName), IsUnique = true)]
+    [Index(nameof(PhoneNumber), IsUnique = true)]
+    [Index(nameof(MemberShipId), IsUnique = true)]
     public class User
     {
         [Key]
         public Guid Id { get; set; }
 
-        [Required]
         [StringLength(50)]
-        public string? UserName { get; set; }
+        public required string UserName { get; set; }
 
         [StringLength(100)]
-        public string? FullName { get; set; }
+        public required string FullName { get; set; }
 
-        [Required]
         [EmailAddress]
-        public string? Email { get; set; }
+        public required string Email { get; set; }
 
         [Phone]
-        public string? PhoneNumber { get; set; }
+        public required string PhoneNumber { get; set; }
 
-        [Required]
         [StringLength(20)]
-        public string? Role { get; set; }
+        public required string UserType { get; set; }
 
-        [Required]
-        public string? Password { get; set; }
+        public required string Password { get; set; }
+
+        public required string MemberShipId { get; set; }
     }
 }
