@@ -1,15 +1,18 @@
 ﻿using BookNest.Data.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookNest.Data
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<User, Role, long>
     {
-        public AppDbContext(DbContextOptions options) : base(options)
+        public AppDbContext(DbContextOptions<AppDbContext> options)
+            : base(options)
         {
-
         }
-        public DbSet<User> Users {  get; set; }
-        public DbSet<Badges> Badges {  get; set; }
+
+       //Other Necessary DbSets
+        public DbSet<Badges> Badges { get; set; }
     }
 }
