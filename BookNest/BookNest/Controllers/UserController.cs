@@ -15,20 +15,26 @@ namespace BookNest.Controllers
             this.dbContext = dbContext;
         }
 
-        //[HttpPost]
-        //public IActionResult AddUser(User user)
-        //{
-        //    dbContext.Users.Add(user);
-        //    dbContext.SaveChanges();
-        //    return Ok(user);
-        //}
 
+        [HttpGet]
+        public IActionResult GetAllUser()
+        {
+            List<User> usersList = dbContext.Users.ToList();
+            return Ok(usersList);
+        }
 
-        //[HttpGet]
-        //public IActionResult GetAllUser()
-        //{
-        //    List<User> usersList = dbContext.Users.ToList();
-        //    return Ok(usersList);
-        //}
+        [HttpGet("{id}")]
+        public IActionResult GetUserById(int id)
+        {
+            var user = dbContext.Users.FirstOrDefault(u => u.Id == id);
+
+            if (user == null)
+            {
+                return NotFound($"User with ID {id} not found.");
+            }
+
+            return Ok(user);
+        }
+
     }
 }

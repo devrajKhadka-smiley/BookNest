@@ -42,7 +42,7 @@ namespace BookNest.Controllers
             return BadRequest(result.Errors);
         }
 
-        [HttpPost("staff-register")]
+        [HttpPost("staffregister")]
         public async Task<IActionResult> StaffRegister(RegisterUserDto registeruserDto)
         {
             User user = new User
