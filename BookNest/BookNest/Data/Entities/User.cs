@@ -11,9 +11,9 @@ namespace BookNest.Data.Entities
     //[Index(nameof(MemberShipId), IsUnique = true)]
     public class User : IdentityUser<long>
     {
-        public required string Firstname { get; set; }
-        public required string Lastname { get; set; }
-        public required string Address { get; set; }
-        public required string MemberShipId { get; set; }
+        public string? Firstname { get; set; }
+        public string? Lastname { get; set; }
+        public string? Address { get; set; }
+        public string? MemberShipId { get; set; }
     }
 }
