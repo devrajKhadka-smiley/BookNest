@@ -9,7 +9,7 @@ namespace BookNest.Data.Entities
 
         [Required]
         [MaxLength(100)]
-        public string? Name { get; set; }
+        public string? GenreName { get; set; }
 
         public ICollection<Book> Books { get; set; }
     }
