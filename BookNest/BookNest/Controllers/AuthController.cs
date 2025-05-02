@@ -22,6 +22,20 @@ namespace BookNest.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> UserRegister(RegisterUserDto registeruserDto)
         {
+
+            var existingUserByUsername = await userManager.FindByNameAsync(registeruserDto.UserName);
+            if (existingUserByUsername != null)
+            {
+                return BadRequest(new { message = "Username already exists.😏" });
+            }
+
+            var existingUserByEmail = await userManager.FindByEmailAsync(registeruserDto.Email);
+            if (existingUserByEmail != null)
+            {
+                return BadRequest(new { message = "This email is already used in another account." });
+            }
+
+
             User user = new User
             {
                 UserName = registeruserDto.UserName,
@@ -32,12 +46,11 @@ namespace BookNest.Controllers
                 MemberShipId = Guid.NewGuid().ToString("N")
             };
 
-            // Create the user with the provided password
+
             var result = await userManager.CreateAsync(user, registeruserDto.Password);
 
             if (result.Succeeded)
             {
-                // Add user to the "Member" role
                 await userManager.AddToRoleAsync(user, "Member");
                 return Ok("Register Successful");
             }
@@ -46,6 +59,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost("staffregister")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> StaffRegister(RegisterUserDto registeruserDto)
         {
             User user = new User
@@ -70,7 +84,6 @@ namespace BookNest.Controllers
         }
 
         [HttpPost("login")]
-        //[Authorize]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var user = await userManager.FindByEmailAsync(loginDto.Email);

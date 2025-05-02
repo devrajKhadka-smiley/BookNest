@@ -13,6 +13,5 @@ namespace BookNest.Data
         }
 
        //Other Necessary DbSets
-        public DbSet<Badges> Badges { get; set; }
     }
 }
