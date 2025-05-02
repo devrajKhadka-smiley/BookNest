@@ -4,23 +4,37 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BookNest.Controllers
 {
-    [Route("api/controller")]
     [ApiController]
-    public class UserController: ControllerBase
+    [Route("api/[controller]")]
+    public class UserController : ControllerBase
     {
         private readonly AppDbContext dbContext;
 
-        public UserController (AppDbContext dbContext)
+        public UserController(AppDbContext dbContext)
         {
             this.dbContext = dbContext;
         }
 
-        [HttpPost]
-        public IActionResult AddUser(User user)
+
+        [HttpGet]
+        public IActionResult GetAllUser()
         {
-            dbContext.Users.Add(user);
-            dbContext.SaveChanges();
+            List<User> usersList = dbContext.Users.ToList();
+            return Ok(usersList);
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult GetUserById(int id)
+        {
+            var user = dbContext.Users.FirstOrDefault(u => u.Id == id);
+
+            if (user == null)
+            {
+                return NotFound($"User with ID {id} not found.");
+            }
+
             return Ok(user);
         }
+
     }
 }
