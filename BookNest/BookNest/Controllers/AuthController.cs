@@ -23,13 +23,13 @@ namespace BookNest.Controllers
         public async Task<IActionResult> UserRegister(RegisterUserDto registeruserDto)
         {
 
-            var existingUserByUsername = await userManager.FindByNameAsync(registeruserDto.UserName!);
+            var existingUserByUsername = await userManager.FindByNameAsync(registeruserDto.UserName);
             if (existingUserByUsername != null)
             {
                 return BadRequest(new { message = "Username already exists.😏" });
             }
 
-            var existingUserByEmail = await userManager.FindByEmailAsync(registeruserDto.Email!);
+            var existingUserByEmail = await userManager.FindByEmailAsync(registeruserDto.Email);
             if (existingUserByEmail != null)
             {
                 return BadRequest(new { message = "This email is already used in another account." });
@@ -47,7 +47,7 @@ namespace BookNest.Controllers
             };
 
 
-            var result = await userManager.CreateAsync(user, registeruserDto.Password!);
+            var result = await userManager.CreateAsync(user, registeruserDto.Password);
 
             if (result.Succeeded)
             {
