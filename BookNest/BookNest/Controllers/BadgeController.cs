@@ -9,25 +9,25 @@ namespace BookNest.Controllers
     [Route("api/[controller]")]
     public class BadgeController : ControllerBase
     {
-        private readonly AppDbContext dbContext;
+        private readonly AppDbContext _context;
 
-        public BadgeController(AppDbContext dbContext)
+        public BadgeController(AppDbContext context)
         {
-            this.dbContext = dbContext;
+            _context = context;
         }
 
 
         [HttpGet]
-        public IActionResult GetAllBadges()
+        public async Task <IActionResult> GetAllBadges()
         {
-            List<Badge> badgesList = dbContext.Badges.ToList();
+            List<Badge> badgesList = await _context.Badges.ToListAsync();
             return Ok(badgesList);
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetBadgeById(Guid id)
+        public async Task <IActionResult> GetBadgeById(Guid id)
         {
-            var badge = dbContext.Badges.FirstOrDefault(b => b.Id == id);
+            var badge = await _context.Badges.FindAsync(id);
 
             if (badge == null)
             {
@@ -38,9 +38,9 @@ namespace BookNest.Controllers
         }
 
         [HttpPut("update/{id}")]
-        public IActionResult UpdateBadge(Guid id, Badge updatedBadge)
+        public async Task <IActionResult> UpdateBadge(Guid id, Badge updatedBadge)
         {
-            var badge = dbContext.Badges.FirstOrDefault(b => b.Id == id);
+            var badge = await _context.Badges.FindAsync(id);
 
             if (badge == null)
             {
@@ -51,22 +51,9 @@ namespace BookNest.Controllers
 
             badge.Books = updatedBadge.Books;
 
-            dbContext.SaveChanges();
+            _context.SaveChanges();
 
             return Ok(badge);
-        }
-
-        [HttpDelete("delete/{id}")]
-        public IActionResult DeleteBadge(Guid id)
-        {
-            int rowsAffected = dbContext.Badges.Where(b => b.Id == id).ExecuteDelete();
-
-            if (rowsAffected == 0)
-            {
-                return NotFound($"Badge with ID {id} not found.");
-            }
-
-            return Ok($"Badge with ID {id} deleted successfully.");
         }
     }
 }

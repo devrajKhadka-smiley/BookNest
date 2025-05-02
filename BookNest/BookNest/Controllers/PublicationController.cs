@@ -9,25 +9,25 @@ namespace BookNest.Controllers
     [Route("api/[controller]")]
     public class PublicationController : ControllerBase
     {
-        private readonly AppDbContext dbContext;
+        private readonly AppDbContext _context;
 
-        public PublicationController(AppDbContext dbContext)
+        public PublicationController(AppDbContext context)
         {
-            this.dbContext = dbContext;
+            _context = context;
         }
 
 
         [HttpGet]
-        public IActionResult GetAllPublications()
+        public async Task <IActionResult> GetAllPublications()
         {
-            List<Publication> publicationsList = dbContext.Publications.ToList();
+            List<Publication> publicationsList = await _context.Publications.ToListAsync();
             return Ok(publicationsList);
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetPublicationById(Guid id)
+        public async Task <IActionResult> GetPublicationById(Guid id)
         {
-            var publication = dbContext.Publications.FirstOrDefault(p => p.PublicationId == id);
+            var publication = await _context.Publications.FindAsync(id);
 
             if (publication == null)
             {
@@ -38,9 +38,9 @@ namespace BookNest.Controllers
         }
 
         [HttpPut("update/{id}")]
-        public IActionResult UpdatePublication(Guid id, Publication updatedPublication)
+        public async Task <IActionResult> UpdatePublication(Guid id, Publication updatedPublication)
         {
-            var publication = dbContext.Publications.FirstOrDefault(p => p.PublicationId == id);
+            var publication = await _context.Publications.FindAsync(id);
 
             if (publication == null)
             {
@@ -49,19 +49,9 @@ namespace BookNest.Controllers
 
             publication.Name = updatedPublication.Name;
 
-            dbContext.SaveChanges();
+            _context.SaveChanges();
 
             return Ok(publication);
-        }
-
-        [HttpDelete("delete/{id}")]
-        public IActionResult DeletePublication(Guid id)
-        {
-            int rowsAffected = dbContext.Publications.Where(p => p.PublicationId == id).ExecuteDelete();
-
-            return rowsAffected > 0
-                ? Ok("Deleted successfully")
-                : NotFound("Id not found");
         }
     }
 }
