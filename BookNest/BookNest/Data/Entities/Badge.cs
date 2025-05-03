@@ -11,7 +11,7 @@ namespace BookNest.Data.Entities
 
         [Required]
         [MaxLength(100)]
-        public required string BadgeName { get; set; }
+        public string? BadgeName { get; set; }
         public ICollection<Book> Books { get; set; }
     }
 }

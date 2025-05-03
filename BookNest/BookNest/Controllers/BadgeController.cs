@@ -1,5 +1,6 @@
 ﻿using BookNest.Data;
 using BookNest.Data.Entities;
+using BookNest.Models.Dto.Badge;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,44 +17,54 @@ namespace BookNest.Controllers
             _context = context;
         }
 
-
         [HttpGet]
-        public async Task <IActionResult> GetAllBadges()
+        public async Task<IActionResult> GetAllBadges()
         {
-            List<Badge> badgesList = await _context.Badges.ToListAsync();
-            return Ok(badgesList);
+            List<Badge> badgeList = await _context.Badges.ToListAsync();
+
+            if (badgeList == null || badgeList.Count == 0)
+                return NotFound("No Badge Found");
+
+            return Ok(badgeList);
         }
 
         [HttpGet("{id}")]
-        public async Task <IActionResult> GetBadgeById(Guid id)
+        public async Task<IActionResult> GetBadgeById(Guid id)
         {
-            var badge = await _context.Badges.FindAsync(id);
+            Badge? badge = await _context.Badges.FindAsync(id);
 
             if (badge == null)
-            {
                 return NotFound($"Badge with ID {id} not found.");
-            }
 
             return Ok(badge);
         }
 
-        [HttpPut("update/{id}")]
-        public async Task <IActionResult> UpdateBadge(Guid id, Badge updatedBadge)
+        [HttpPost]
+        public async Task<IActionResult> CreateBadge(CreateBadgeDto dto)
         {
-            var badge = await _context.Badges.FindAsync(id);
-
-            if (badge == null)
+            Badge badge = new Badge
             {
-                return NotFound($"Badge with ID {id} not found.");
-            }
+                BadgeName = dto.BadgeName
+            };
 
-            badge.BadgeName = updatedBadge.BadgeName;
-
-            badge.Books = updatedBadge.Books;
-
-            _context.SaveChanges();
+            _context.Badges.Add(badge);
+            await _context.SaveChangesAsync();
 
             return Ok(badge);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateBadge(Guid id, UpdateBadgeDto dto)
+        {
+            Badge? existingBadge = await _context.Badges.FindAsync(id);
+
+            if (existingBadge == null)
+                return NotFound($"Badge with ID {id} not found.");
+
+            existingBadge.BadgeName = dto.BadgeName;
+            _context.SaveChanges();
+
+            return Ok(existingBadge);
         }
     }
 }
