@@ -1,5 +1,6 @@
 using BookNest.Data;
 using BookNest.Data.Entities;
+using BookNest.Models.Dto.Publication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,40 +19,53 @@ namespace BookNest.Controllers
 
 
         [HttpGet]
-        public async Task <IActionResult> GetAllPublications()
+        public async Task<IActionResult> GetAllPublications()
         {
-            List<Publication> publicationsList = await _context.Publications.ToListAsync();
-            return Ok(publicationsList);
+            List<Publication> publicationList = await _context.Publications.ToListAsync();
+
+            if (publicationList == null || publicationList.Count == 0)
+                return NotFound("No publication found");
+
+            return Ok(publicationList);
         }
 
         [HttpGet("{id}")]
-        public async Task <IActionResult> GetPublicationById(Guid id)
+        public async Task<IActionResult> GetPublicationById(Guid id)
         {
-            var publication = await _context.Publications.FindAsync(id);
+            Publication? publication = await _context.Publications.FindAsync(id);
 
             if (publication == null)
-            {
                 return NotFound($"Publication with ID {id} not found.");
-            }
 
             return Ok(publication);
         }
 
-        [HttpPut("update/{id}")]
-        public async Task <IActionResult> UpdatePublication(Guid id, Publication updatedPublication)
+        [HttpPost]
+        public async Task<IActionResult> CreatePublication(CreatePublicationDto dto)
         {
-            var publication = await _context.Publications.FindAsync(id);
-
-            if (publication == null)
+            Publication publication = new Publication
             {
-                return NotFound($"Publication with ID {id} not found.");
-            }
+                PublicationName = dto.PublicationName
+            };
 
-            publication.PublicationName = updatedPublication.PublicationName;
-
-            _context.SaveChanges();
+            _context.Publications.Add(publication);
+            await _context.SaveChangesAsync();
 
             return Ok(publication);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdatePublication(Guid id, UpdatePublicationDto dto)
+        {
+            Publication? existingPublication = await _context.Publications.FindAsync(id);
+
+            if (existingPublication == null)
+                return NotFound($"Publication with ID {id} not found.");
+
+            existingPublication.PublicationName = dto.PublicationName;
+            await _context.SaveChangesAsync();
+
+            return Ok(existingPublication);
         }
     }
 }

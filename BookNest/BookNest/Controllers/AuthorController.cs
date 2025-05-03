@@ -19,7 +19,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAuthors()
+        public async Task<IActionResult> GetAllAuthors()
         {
             List<Author> authorList = await _context.Authors.ToListAsync();
 
@@ -30,7 +30,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetAuthors(Guid id)
+        public async Task<IActionResult> GetAuthorById(Guid id)
         {
             Author? author = await _context.Authors.FindAsync(id);
 
