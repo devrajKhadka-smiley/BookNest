@@ -17,7 +17,7 @@ namespace BookNest.Data.Entities
         [MaxLength(2000)]
         public string? BookDescription { get; set; }
 
-        public int BookAuthorId { get; set; }
+        public Guid BookAuthorId { get; set; }
 
         public Author? Author { get; set; }
 
@@ -34,7 +34,7 @@ namespace BookNest.Data.Entities
         [MaxLength(50)]
         public string? BookFormat { get; set; }
 
-        public int BookPublicationId { get; set; }
+        public Guid BookPublicationId { get; set; }
 
         public Publication? Publication { get; set; }
 

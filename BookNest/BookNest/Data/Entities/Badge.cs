@@ -7,10 +7,11 @@ namespace BookNest.Data.Entities
     public class Badge
     {
         [Key]
-        public Guid Id { get; set; }
+        public Guid BadgeId { get; set; }
 
-        [StringLength(50)]
+        [Required]
+        [MaxLength(100)]
         public required string BadgeName { get; set; }
-        public ICollection<Book> Books { get; set;}
+        public ICollection<Book> Books { get; set; }
     }
 }

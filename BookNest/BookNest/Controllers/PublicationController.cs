@@ -47,7 +47,7 @@ namespace BookNest.Controllers
                 return NotFound($"Publication with ID {id} not found.");
             }
 
-            publication.Name = updatedPublication.Name;
+            publication.PublicationName = updatedPublication.PublicationName;
 
             _context.SaveChanges();
 
