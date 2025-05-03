@@ -1,5 +1,6 @@
 ﻿using BookNest.Data;
 using BookNest.Data.Entities;
+using BookNest.Models.Dto.Genre;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,14 +19,12 @@ namespace BookNest.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetGenres()
+        public async Task<IActionResult> GetAllGenres()
         {
             List<Genre> genreList = await _context.Genres.ToListAsync();
 
-            if (genreList == null  || genreList.Count == 0)
-            {
+            if (genreList == null || genreList.Count == 0)
                 return NotFound("No Genre Found");
-            }
 
             return Ok(genreList);
         }
@@ -33,42 +32,37 @@ namespace BookNest.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetGenre(Guid id)
         {
-            var genre = await _context.Genres.FindAsync(id);
+            Genre? genre = await _context.Genres.FindAsync(id);
 
             if (genre == null)
-            {
                 return NotFound("Genre Id Not Found");
-            }
 
             return Ok(genre);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateGenre(Genre genre)
+        public async Task<IActionResult> CreateGenre(CreateGenreDto dto)
         {
+            Genre genre = new Genre
+            {
+                GenreName = dto.GenreName,
+            };
+
             _context.Genres.Add(genre);
             await _context.SaveChangesAsync();
 
-            //return CreatedAtAction(nameof(GetGenre), new { id = genre.GenreId }, genre);
             return Ok(genre);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateGenre(Guid id, Genre updatedGenre)
+        public async Task<IActionResult> UpdateGenre(Guid id, UpdateGenreDto dto)
         {
-            if (id != updatedGenre.GenreId)
-            {
-                return BadRequest("ID mismatch");
-            }
-
             Genre? existingGenre = await _context.Genres.FindAsync(id);
 
             if (existingGenre == null)
-            {
                 return NotFound("Genre Not Found");
-            }
 
-            existingGenre.GenreName = updatedGenre.GenreName;
+            existingGenre.GenreName = dto.GenreName;
             await _context.SaveChangesAsync();
 
             return Ok(existingGenre);

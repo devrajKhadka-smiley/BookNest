@@ -7,7 +7,7 @@ namespace BookNest.Data.Entities
     public class Badge
     {
         [Key]
-        public Guid BadgeId { get; set; }
+        public Guid BadgeId { get; set; } = Guid.NewGuid();
 
         [Required]
         [MaxLength(100)]

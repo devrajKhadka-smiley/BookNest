@@ -5,7 +5,7 @@ namespace BookNest.Data.Entities
     public class Genre
     {
         [Key]
-        public Guid GenreId { get; set; }
+        public Guid GenreId { get; set; } = Guid.NewGuid();
 
         [Required]
         [MaxLength(100)]
