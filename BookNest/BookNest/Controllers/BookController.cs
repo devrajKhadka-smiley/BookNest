@@ -1,10 +1,8 @@
 ﻿using BookNest.Data;
 using BookNest.Data.Entities;
 using BookNest.Models.Dto.Book;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Globalization;
 
 namespace BookNest.Controllers
 {
@@ -154,5 +152,58 @@ namespace BookNest.Controllers
 
             return CreatedAtAction(nameof(GetBookById), new {id = result.BookId}, result);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateBook(Guid id, [FromBody] UpdateBookDto dto)
+        {
+            if (id != dto.BookId)
+                return BadRequest("Book ID mismatch.");
+
+            var book = await _context.Books
+                .Include(b => b.Genres)
+                .Include(b => b.Badges)
+                .FirstOrDefaultAsync(b => b.BookId == id);
+
+            if (book == null)
+                return NotFound("Book not found.");
+
+            var authorExists = await _context.Authors.AnyAsync(a => a.AuthorId == dto.BookAuthorId);
+            var publicationExists = await _context.Publications.AnyAsync(p => p.PublicationId == dto.BookPublicationId);
+
+            if (!authorExists || !publicationExists)
+                return BadRequest("Invalid Author or Publication.");
+
+            book.BookTitle = dto.BookTitle;
+            book.BookISBN = dto.BookISBN;
+            book.BookDescription = dto.BookDescription;
+            book.BookAuthorId = dto.BookAuthorId;
+            book.BookPublicationId = dto.BookPublicationId;
+            book.BookStock = dto.BookStock;
+            book.BookPrice = dto.BookPrice;
+            book.BookRating = dto.BookRating;
+            book.BookLanguage = dto.BookLanguage;
+            book.BookFormat = dto.BookFormat;
+            book.BookSold = dto.BookSold;
+            book.DiscountPercentage = dto.DiscountPercentage;
+            book.BookReviewCount = dto.BookReviewCount;
+            book.BookFinalPrice = dto.BookFinalPrice;
+            book.IsOnSale = dto.IsOnSale;
+            book.DiscountStartDate = dto.DiscountStartDate;
+            book.DiscountEndDate = dto.DiscountEndDate;
+
+
+            book.Genres = dto.GenreIds != null && dto.GenreIds.Any()
+                ? await _context.Genres.Where(g => dto.GenreIds.Contains(g.GenreId)).ToListAsync()
+                : new List<Genre>();
+
+            book.Badges = dto.BadgeIds != null && dto.BadgeIds.Any()
+                ? await _context.Badges.Where(b => dto.BadgeIds.Contains(b.BadgeId)).ToListAsync()
+                : new List<Badge>();
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
     }
 }
