@@ -83,13 +83,45 @@ namespace BookNest.Controllers
             return BadRequest(result.Errors);
         }
 
-        [HttpPost("login")]
+        [HttpPost("user/login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var user = await userManager.FindByEmailAsync(loginDto.Email!);
             if (user == null)
             {
                 return Unauthorized(new { message = "No such email address found." });
+            }
+
+            if (!await userManager.IsInRoleAsync(user, "Member"))
+            {
+                return Unauthorized(new { message = "Such user doesn't exist" });
+            }
+
+            var result = await signInManager.PasswordSignInAsync(user, loginDto.Password!, false, false);
+
+            if (result.Succeeded)
+            {
+                return Ok(new { message = "Login Successful" });
+            }
+
+            return Unauthorized(new { message = "Some credentials didn't match 😒." });
+        }
+
+        [HttpPost("admin/login")]
+        public async Task<IActionResult> AdminLogin([FromBody] LoginDto loginDto)
+        {
+            var user = await userManager.FindByEmailAsync(loginDto.Email!);
+            if (user == null)
+            {
+                return Unauthorized(new { message = "No such email address found." });
+            }
+
+            var isAdmin = await userManager.IsInRoleAsync(user, "Admin");
+            var isStaff = await userManager.IsInRoleAsync(user, "Staff");
+
+            if (!isAdmin && !isStaff)
+            {
+                return Unauthorized(new { message = "Such user doesn't exist" });
             }
 
             var result = await signInManager.PasswordSignInAsync(user, loginDto.Password!, false, false);
