@@ -1,8 +1,14 @@
 using BookNest.Data;
 using BookNest.Data.Entities;
 using BookNest.Data.Seeders;
+using BookNest.Models;
+using BookNest.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +39,39 @@ builder.Services.AddCors(options =>
 });
 
 
+//Jwt Config with Dependency Injection
+
+builder.Services.Configure<JwtTokenInfo>(
+    builder.Configuration.GetSection("JwtConfig")
+    );
+
+//Manually retrieving the JWt Config
+JwtTokenInfo tokenInfo = builder.Configuration.GetSection("JwtConfig").Get<JwtTokenInfo>();
+
+builder.Services.AddScoped<JwtServices>();
+
+//----------------JWT Registration----------------
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = tokenInfo.Issuer,
+        ValidAudience = tokenInfo.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenInfo.SecretKey))
+    };
+});
+//----------------End of JWT Registration----------------
 
 var app = builder.Build();
 

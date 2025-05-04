@@ -1,5 +1,6 @@
 ﻿using BookNest.Data.Entities;
 using BookNest.Models.Dto;
+using BookNest.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +13,13 @@ namespace BookNest.Controllers
     {
         private readonly UserManager<User> userManager;
         private readonly SignInManager<User> signInManager;
+        private readonly JwtServices _jwtservices;
 
-        public AuthController(UserManager<User> userManager, SignInManager<User> signInManager)
+        public AuthController(UserManager<User> userManager, SignInManager<User> signInManager, JwtServices _jwtservices)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
+            this._jwtservices = _jwtservices;
         }
 
         [HttpPost("register")]
@@ -101,7 +104,14 @@ namespace BookNest.Controllers
 
             if (result.Succeeded)
             {
-                return Ok(new { message = "Login Successful" });
+                var roles = await userManager.GetRolesAsync(user);
+                var token = _jwtservices.GenerateToken(user, roles);
+
+                return Ok(new
+                {
+                    message = "Login Successful",
+                    token = token
+                });
             }
 
             return Unauthorized(new { message = "Some credentials didn't match 😒." });
