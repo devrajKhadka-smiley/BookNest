@@ -150,7 +150,7 @@ namespace BookNest.Controllers
                 DiscountEndDate = book.DiscountEndDate
             };
 
-            return CreatedAtAction(nameof(GetBookById), new {id = result.BookId}, result);
+            return CreatedAtAction(nameof(GetBookById), new { id = result.BookId }, result);
         }
 
         [HttpPut("{id}")]
@@ -159,7 +159,7 @@ namespace BookNest.Controllers
             if (id != dto.BookId)
                 return BadRequest("Book ID mismatch.");
 
-            var book = await _context.Books
+            Book? book = await _context.Books
                 .Include(b => b.Genres)
                 .Include(b => b.Badges)
                 .FirstOrDefaultAsync(b => b.BookId == id);
@@ -167,8 +167,8 @@ namespace BookNest.Controllers
             if (book == null)
                 return NotFound("Book not found.");
 
-            var authorExists = await _context.Authors.AnyAsync(a => a.AuthorId == dto.BookAuthorId);
-            var publicationExists = await _context.Publications.AnyAsync(p => p.PublicationId == dto.BookPublicationId);
+            bool authorExists = await _context.Authors.AnyAsync(a => a.AuthorId == dto.BookAuthorId);
+            bool publicationExists = await _context.Publications.AnyAsync(p => p.PublicationId == dto.BookPublicationId);
 
             if (!authorExists || !publicationExists)
                 return BadRequest("Invalid Author or Publication.");
@@ -200,6 +200,23 @@ namespace BookNest.Controllers
                 ? await _context.Badges.Where(b => dto.BadgeIds.Contains(b.BadgeId)).ToListAsync()
                 : new List<Badge>();
 
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteBook(Guid id)
+        {
+            Book? book = await _context.Books
+                .Include(b => b.Genres)
+                .Include(b => b.Badges)
+                .FirstOrDefaultAsync(b => b.BookId == id);
+
+            if (book == null)
+                return NotFound("Book not found.");
+
+            _context.Books.Remove(book);
             await _context.SaveChangesAsync();
 
             return NoContent();
