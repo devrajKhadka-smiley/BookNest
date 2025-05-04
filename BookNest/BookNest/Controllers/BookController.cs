@@ -18,24 +18,97 @@ namespace BookNest.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllBooks()
+        public async Task<IActionResult> GetAllBooks(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 8,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] List<Guid>? authorIds = null,
+            [FromQuery] List<Guid>? publicationIds = null,
+            [FromQuery] List<Guid>? genreIds = null,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] bool isAscending = true
+        )
         {
-            var books = await _context.Books
+            if (pageNumber <= 0 || pageSize <= 0)
+                return BadRequest("Page Number and page size must be greater than 0");
+
+            var query = _context.Books
                 .Include(b => b.Author)
                 .Include(b => b.Publication)
                 .Include(b => b.Genres)
-                .Select(b => new ReadBookDto
-                {
-                    BookId = b.BookId,
-                    BookTitle = b.BookTitle,
-                    BookISBN = b.BookISBN,
-                    AuthorName = b.Author!.AuthorName,
-                    PublicationName = b.Publication!.PublicationName,
-                    Genres = b.Genres!.Select(g => g.GenreName!).ToList()
-                })
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                string lowerSearch = searchTerm.Trim().ToLower();
+                query = query.Where(b =>
+                    b.BookTitle!.ToLower().Contains(lowerSearch) ||
+                    b.BookDescription!.ToLower().Contains(lowerSearch) ||
+                    b.BookISBN!.ToLower().Contains(lowerSearch)
+                );
+            }
+
+            if (authorIds != null && authorIds.Any())
+                query = query.Where(b => authorIds.Contains(b.BookAuthorId));
+
+            if (publicationIds != null && publicationIds.Any())
+                query = query.Where(b => publicationIds.Contains(b.BookPublicationId));
+
+            if (genreIds != null && genreIds.Any())
+                query = query.Where(b => b.Genres!.Any(g => genreIds.Contains(g.GenreId)));
+
+            int totalRecords = await query.CountAsync();
+
+            query = sortBy?.ToLower() switch
+            {
+                "title" => isAscending
+                    ? query.OrderBy(b => b.BookTitle)
+                    : query.OrderByDescending(b => b.BookTitle),
+
+                "date" or "publicationdate" => isAscending
+                    ? query.OrderBy(b => b.BookAddedDate)
+                    : query.OrderByDescending(b => b.BookAddedDate),
+
+                "price" => isAscending
+                    ? query.OrderBy(b => b.BookPrice)
+                    : query.OrderByDescending(b => b.BookPrice),
+
+                "popularity" => isAscending
+                    ? query.OrderBy(b => b.BookSold)
+                    : query.OrderByDescending(b => b.BookSold),
+
+                _ => query.OrderBy(b => b.BookTitle) // Default sort
+            };
+
+
+            var pagedBooks = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            return Ok(books);
+            var result = pagedBooks.Select(b => new ReadBookDto
+            {
+                BookId = b.BookId,
+                BookTitle = b.BookTitle,
+                BookISBN = b.BookISBN,
+                AuthorName = b.Author != null ? b.Author.AuthorName! : "Unknown",
+                PublicationName = b.Publication != null ? b.Publication.PublicationName! : "Unknown",
+                Genres = b.Genres!.Select(g => g.GenreName!).ToList()
+            }).ToList();
+
+            var response = new
+            {
+                TotalRecords = totalRecords,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                SearchTerm = searchTerm,
+                AuthorIds = authorIds,
+                PublicationIds = publicationIds,
+                GenreIds = genreIds,
+                Data = result
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("{id}")]

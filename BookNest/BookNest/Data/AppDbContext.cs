@@ -24,6 +24,18 @@ namespace BookNest.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Book>()
+                .HasOne(b => b.Author)
+                .WithMany()
+                .HasForeignKey(b => b.BookAuthorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Book>()
+                .HasOne(b => b.Publication)
+                .WithMany()
+                .HasForeignKey(b => b.BookPublicationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Book>()
                 .HasMany(b => b.Genres)
                 .WithMany(g => g.Books)
                 .UsingEntity(j => j.ToTable("BooksGenre"));
