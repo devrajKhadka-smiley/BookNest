@@ -89,16 +89,17 @@ namespace BookNest.Controllers
             var user = await userManager.FindByEmailAsync(loginDto.Email!);
             if (user == null)
             {
-                return Unauthorized("No such email address found.");
+                return Unauthorized(new { message = "No such email address found." });
             }
+
             var result = await signInManager.PasswordSignInAsync(user, loginDto.Password!, false, false);
 
             if (result.Succeeded)
             {
-                return Ok("Login Successful");
+                return Ok(new { message = "Login Successful" });
             }
 
-            return Unauthorized("Some credentials didn't match.");
+            return Unauthorized(new { message = "Some credentials didn't match 😒." });
         }
 
     }
