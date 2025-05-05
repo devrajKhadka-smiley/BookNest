@@ -28,7 +28,9 @@ namespace BookNest.Controllers
             [FromQuery] string? sortBy = null,
             [FromQuery] bool isAscending = true,
             [FromQuery] decimal? minPrice = null,
-            [FromQuery] decimal? maxPrice = null
+            [FromQuery] decimal? maxPrice = null,
+            [FromQuery] List<string>? languages = null,
+            [FromQuery] List<string>? formats = null
         )
         {
             if (pageNumber <= 0 || pageSize <= 0)
@@ -64,6 +66,18 @@ namespace BookNest.Controllers
 
             if (maxPrice.HasValue)
                 query = query.Where(b => b.BookPrice <= maxPrice.Value);
+
+            if (languages != null && languages.Any())
+            {
+                List<string> loweredLanguages = languages.Select(l => l.Trim().ToLower()).ToList();
+                query = query.Where(b => loweredLanguages.Contains(b.BookLanguage!.ToLower()));
+            }
+
+            if (formats != null && formats.Any())
+            {
+                var loweredFormats = formats.Select(f => f.Trim().ToLower()).ToList();
+                query = query.Where(b => loweredFormats.Contains(b.BookFormat!.ToLower()));
+            }
 
             int totalRecords = await query.CountAsync();
 
@@ -115,6 +129,8 @@ namespace BookNest.Controllers
                 GenreIds = genreIds,
                 MinPrice = minPrice,
                 MaxPrice = maxPrice,
+                Languages = languages,
+                Formats = formats,
                 SortBy = sortBy,
                 IsAscending = isAscending,
                 Data = result
