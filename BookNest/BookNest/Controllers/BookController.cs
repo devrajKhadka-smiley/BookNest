@@ -30,7 +30,8 @@ namespace BookNest.Controllers
             [FromQuery] decimal? minPrice = null,
             [FromQuery] decimal? maxPrice = null,
             [FromQuery] List<string>? languages = null,
-            [FromQuery] List<string>? formats = null
+            [FromQuery] List<string>? formats = null,
+            [FromQuery] Guid? badgeId = null
         )
         {
             if (pageNumber <= 0 || pageSize <= 0)
@@ -78,6 +79,9 @@ namespace BookNest.Controllers
                 var loweredFormats = formats.Select(f => f.Trim().ToLower()).ToList();
                 query = query.Where(b => loweredFormats.Contains(b.BookFormat!.ToLower()));
             }
+
+            if (badgeId.HasValue)
+                query = query.Where(b => b.Badges.Any(bd => bd.BadgeId == badgeId.Value));
 
             int totalRecords = await query.CountAsync();
 
@@ -131,6 +135,7 @@ namespace BookNest.Controllers
                 MaxPrice = maxPrice,
                 Languages = languages,
                 Formats = formats,
+                BadgeId = badgeId,
                 SortBy = sortBy,
                 IsAscending = isAscending,
                 Data = result
