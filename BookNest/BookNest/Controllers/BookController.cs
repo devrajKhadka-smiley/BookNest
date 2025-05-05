@@ -31,7 +31,8 @@ namespace BookNest.Controllers
             [FromQuery] decimal? maxPrice = null,
             [FromQuery] List<string>? languages = null,
             [FromQuery] List<string>? formats = null,
-            [FromQuery] Guid? badgeId = null
+            [FromQuery] Guid? badgeId = null,
+            [FromQuery] float? minRating = null
         )
         {
             if (pageNumber <= 0 || pageSize <= 0)
@@ -83,6 +84,9 @@ namespace BookNest.Controllers
             if (badgeId.HasValue)
                 query = query.Where(b => b.Badges.Any(bd => bd.BadgeId == badgeId.Value));
 
+            if (minRating.HasValue)
+                query = query.Where(b => b.BookRating >= minRating.Value);
+
             int totalRecords = await query.CountAsync();
 
             query = sortBy?.ToLower() switch
@@ -103,7 +107,7 @@ namespace BookNest.Controllers
                     ? query.OrderBy(b => b.BookSold)
                     : query.OrderByDescending(b => b.BookSold),
 
-                _ => query.OrderBy(b => b.BookTitle) // Default sort
+                _ => query.OrderBy(b => b.BookTitle)
             };
 
 
@@ -136,6 +140,7 @@ namespace BookNest.Controllers
                 Languages = languages,
                 Formats = formats,
                 BadgeId = badgeId,
+                MinRating = minRating,
                 SortBy = sortBy,
                 IsAscending = isAscending,
                 Data = result
