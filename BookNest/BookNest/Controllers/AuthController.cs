@@ -46,7 +46,7 @@ namespace BookNest.Controllers
                 Lastname = registeruserDto.Lastname,
                 Email = registeruserDto.Email,
                 Address = registeruserDto.Address,
-                MemberShipId = Guid.NewGuid().ToString("N")
+                MemberShipId = $"MEM{" "}{Random.Shared.Next(100, 1000)}-{Random.Shared.Next(100, 1000)}"
             };
 
 
@@ -138,10 +138,18 @@ namespace BookNest.Controllers
 
             if (result.Succeeded)
             {
-                return Ok(new { message = "Login Successful" });
+                var roles = await userManager.GetRolesAsync(user);
+                var Admintoken = _jwtservices.GenerateToken(user, roles);
+                return Ok(new
+                {
+                    message = "Login Successful",
+                    token = Admintoken
+                });
             }
 
-            return Unauthorized(new { message = "Some credentials didn't match 😒." });
+            return Unauthorized(new
+            { message = "Some credentials didn't match 😒." }
+            );
         }
 
     }

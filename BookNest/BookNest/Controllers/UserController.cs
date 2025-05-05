@@ -1,5 +1,7 @@
 ﻿using BookNest.Data;
 using BookNest.Data.Entities;
+using BookNest.Models.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookNest.Controllers
@@ -15,13 +17,67 @@ namespace BookNest.Controllers
             this.dbContext = dbContext;
         }
 
-
         [HttpGet]
-        public IActionResult GetAllUser()
+        //[Authorize(Roles = "Admin")]
+        public IActionResult GetAllUser([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? searchTerm = null)
         {
-            List<User> usersList = dbContext.Users.ToList();
-            return Ok(usersList);
+            var query = from user in dbContext.Users
+                        join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
+                        join role in dbContext.Roles on userRole.RoleId equals role.Id
+                        where role.Name == "Member"
+                        select user;
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(u =>
+                    u.Email.ToLower().Contains(searchTerm.ToLower()) ||
+                    u.UserName.ToLower().Contains(searchTerm.ToLower()));
+
+                var users = query.ToList();
+
+                return Ok(new
+                {
+                    totalMembers = users.Count,
+                    totalPages = 1,
+                    pageNumber = 1,
+                    pageSize = users.Count,
+                    users
+                });
+            }
+
+            var totalMembers = query.Count();
+
+            var totalPages = (int)Math.Ceiling(totalMembers / (double)pageSize);
+
+            if (pageNumber > totalPages)
+            {
+                return Ok(new
+                {
+                    message = "Page number exceeds available data.",
+                    totalMembers,
+                    totalPages,
+                    pageNumber,
+                    pageSize,
+                    users = new List<object>()
+                });
+            }
+
+            
+            var usersWithPagination = query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return Ok(new
+            {
+                totalMembers,
+                totalPages,
+                pageNumber,
+                pageSize,
+                users = usersWithPagination
+            });
         }
+
 
         [HttpGet("{id}")]
         public IActionResult GetUserById(int id)
@@ -33,7 +89,19 @@ namespace BookNest.Controllers
                 return NotFound($"User with ID {id} not found.");
             }
 
-            return Ok(user);
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                Firstname = user.Firstname,
+                Lastname = user.Lastname,
+                Address = user.Address,
+                MemberShipId = user.MemberShipId
+            };
+
+            return Ok(userDto);
+            //return Ok(user);
         }
 
     }

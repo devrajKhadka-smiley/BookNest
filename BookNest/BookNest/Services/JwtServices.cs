@@ -26,7 +26,7 @@ namespace BookNest.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName ?? ""),
-                new Claim(ClaimTypes.Email, user.Email ?? "")
+                //new Claim(ClaimTypes.Email, user.Email ?? "")
             };
 
             foreach (var role in roles)
