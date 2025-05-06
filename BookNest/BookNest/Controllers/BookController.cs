@@ -121,7 +121,11 @@ namespace BookNest.Controllers
                 BookId = b.BookId,
                 BookTitle = b.BookTitle,
                 BookISBN = b.BookISBN,
-                AuthorName = b.Author != null ? string.Join(", ", b.Author.Select(a => a.AuthorName)) : "Unknown",
+                BookPrice = b.BookPrice,
+                BookFinalPrice = b.BookFinalPrice,
+                BookReviewCount = b.BookReviewCount,
+                BookRating = b.BookRating,
+                AuthorName = b.Author!.Select(a => a.AuthorName!).ToList(),
                 PublicationName = b.Publication != null ? b.Publication.PublicationName! : "Unknown",
                 Genres = b.Genres!.Select(g => g.GenreName!).ToList()
             }).ToList();

@@ -10,7 +10,15 @@ namespace BookNest.Models.Dto.Book
         [Required]
         public string? BookISBN { get; set; }
         [Required]
-        public string? AuthorName { get; set; }
+        public decimal? BookPrice { get; set; }
+        [Required]
+        public decimal? BookFinalPrice { get; set; }
+        [Required]
+        public int? BookReviewCount { get; set; }
+        [Required]
+        public float? BookRating { get; set; }
+        [Required]
+        public List<string>? AuthorName { get; set; }
         [Required]
         public string? PublicationName { get; set; }
         public List<string>? Genres { get; set; }
