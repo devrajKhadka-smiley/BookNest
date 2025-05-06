@@ -1,6 +1,7 @@
 ﻿using BookNest.Data;
 using BookNest.Data.Entities;
 using BookNest.Models.Dto.Book;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -152,6 +153,40 @@ namespace BookNest.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("adminGetAllBooks")]
+        //[Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllAdmin()
+        {
+            var allBooks = await _context.Books
+                .Include(b => b.Author)  // Including related entities
+                .Include(b => b.Publication)
+                .Include(b => b.Genres)
+                .Select(b => new ReadBookDto
+                {
+                    BookId = b.BookId,
+                    BookTitle = b.BookTitle,
+                    BookISBN = b.BookISBN,
+                    BookPrice = b.BookPrice,
+                    BookFinalPrice = b.BookFinalPrice,
+                    BookReviewCount = b.BookReviewCount,
+                    BookRating = b.BookRating,
+                    BookStock = b.BookStock,
+                    SoldPiece = b.BookSold,
+                    OnSale = b.IsOnSale,
+                    AuthorName = b.Author!.Select(a => a.AuthorName!).ToList(),
+                    PublicationName = b.Publication != null ? b.Publication.PublicationName : "Unknown",
+                    Genres = b.Genres != null ? b.Genres.Select(g => g.GenreName).ToList() : new List<string>()
+                })
+                .ToListAsync();  
+
+            return Ok(new
+            {
+                message = "Books retrieved successfully",
+                data = allBooks
+            });
+        }
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBookById(Guid id)
