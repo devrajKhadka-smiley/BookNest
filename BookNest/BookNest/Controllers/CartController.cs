@@ -102,5 +102,32 @@ namespace BookNest.Controllers
 
             return Ok(cartDto);
         }
+
+        [HttpDelete("remove-from-cart/{userId}/{bookId}")]
+        public async Task<IActionResult> RemoveFromCart(long userId, Guid bookId)
+        {
+            var cart = await _context.Carts
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null)
+            {
+                return NotFound("Cart not found for this user.");
+            }
+
+            var cartItem = await _context.CartItems
+                .FirstOrDefaultAsync(ci => ci.CartId == cart.Id && ci.BookId == bookId);
+
+            if (cartItem == null)
+            {
+                return NotFound("Item not found in the cart.");
+            }
+
+            _context.CartItems.Remove(cartItem);
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Item successfully removed from the cart.");
+        }
+
     }
 }
