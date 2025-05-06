@@ -12,13 +12,15 @@ namespace BookNest.Data
         {
         }
 
-       //Other Necessary DbSets
+        //Other Necessary DbSets
         //Other Necessary DbSets
         public DbSet<Book> Books { get; set; }
         public DbSet<Author> Authors { get; set; }
         public DbSet<Publication> Publications { get; set; }
         public DbSet<Genre> Genres { get; set; }
         public DbSet<Badge> Badges { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -50,6 +52,23 @@ namespace BookNest.Data
                 .HasMany(b => b.Badges)
                 .WithMany(g => g.Books)
                 .UsingEntity(j => j.ToTable("BooksBadge"));
+
+
+
+            //-------Cart content
+            modelBuilder.Entity<Cart>()
+            .HasIndex(c => c.UserId)
+            .IsUnique();
+
+            modelBuilder.Entity<Cart>()
+            .HasOne(c => c.User)
+            .WithOne(u => u.Cart)
+            .HasForeignKey<Cart>(c => c.UserId);
+
+            modelBuilder.Entity<CartItem>()
+                .HasOne(ci => ci.Book)
+                .WithMany()
+                .HasForeignKey(ci => ci.BookId);
         }
 
 

@@ -15,5 +15,8 @@ namespace BookNest.Data.Entities
         public string? Lastname { get; set; }
         public string? Address { get; set; }
         public string? MemberShipId { get; set; }
+
+        //--cart 
+        public Cart Cart { get; set; }
     }
 }

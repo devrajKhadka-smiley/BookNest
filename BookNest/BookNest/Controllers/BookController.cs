@@ -65,10 +65,10 @@ namespace BookNest.Controllers
                 query = query.Where(b => b.Genres!.Any(g => genreIds.Contains(g.GenreId)));
 
             if (minPrice.HasValue)
-                query = query.Where(b => b.BookPrice >= minPrice.Value);
+                query = query.Where(b => b.BookFinalPrice >= minPrice.Value);
 
             if (maxPrice.HasValue)
-                query = query.Where(b => b.BookPrice <= maxPrice.Value);
+                query = query.Where(b => b.BookFinalPrice <= maxPrice.Value);
 
             if (languages != null && languages.Any())
             {
@@ -159,7 +159,7 @@ namespace BookNest.Controllers
         public async Task<IActionResult> GetAllAdmin()
         {
             var allBooks = await _context.Books
-                .Include(b => b.Author)  // Including related entities
+                .Include(b => b.Author)  
                 .Include(b => b.Publication)
                 .Include(b => b.Genres)
                 .Select(b => new ReadBookDto
