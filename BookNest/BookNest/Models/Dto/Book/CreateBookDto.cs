@@ -9,8 +9,8 @@ namespace BookNest.Models.Dto.Book
         [Required]
         public string? BookISBN { get; set; }
         public string? BookDescription { get; set; }
-        [Required]
-        public Guid BookAuthorId { get; set; }
+        //[Required]
+        //public Guid BookAuthorId { get; set; }
         [Required]
         public Guid BookPublicationId { get; set; }
         public int BookStock { get; set; }
@@ -27,5 +27,6 @@ namespace BookNest.Models.Dto.Book
         public DateTime? DiscountEndDate { get; set; }
         public List<Guid>? GenreIds { get; set; }
         public List<Guid>? BadgeIds { get; set; }
+        public List<Guid> AuthorIds { get; set; }
     }
 }

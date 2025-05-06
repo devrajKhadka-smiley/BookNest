@@ -10,5 +10,8 @@ namespace BookNest.Data.Entities
         [Required]
         [MaxLength(150)]
         public string? AuthorName { get; set; }
+
+        public ICollection<Book> Books { get; set; }
+
     }
 }

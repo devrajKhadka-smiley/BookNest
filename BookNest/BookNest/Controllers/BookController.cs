@@ -55,7 +55,7 @@ namespace BookNest.Controllers
             }
 
             if (authorIds != null && authorIds.Any())
-                query = query.Where(b => authorIds.Contains(b.BookAuthorId));
+                query = query.Where(b => b.Author!.Any(a => authorIds.Contains(a.AuthorId)));
 
             if (publicationIds != null && publicationIds.Any())
                 query = query.Where(b => publicationIds.Contains(b.BookPublicationId));
@@ -121,7 +121,7 @@ namespace BookNest.Controllers
                 BookId = b.BookId,
                 BookTitle = b.BookTitle,
                 BookISBN = b.BookISBN,
-                AuthorName = b.Author != null ? b.Author.AuthorName! : "Unknown",
+                AuthorName = b.Author != null ? string.Join(", ", b.Author.Select(a => a.AuthorName)) : "Unknown",
                 PublicationName = b.Publication != null ? b.Publication.PublicationName! : "Unknown",
                 Genres = b.Genres!.Select(g => g.GenreName!).ToList()
             }).ToList();
@@ -168,7 +168,7 @@ namespace BookNest.Controllers
                 BookTitle = book.BookTitle,
                 BookISBN = book.BookISBN,
                 BookDescription = book.BookDescription,
-                AuthorName = book.Author?.AuthorName ?? "Unknown",
+                AuthorName = book.Author != null ? string.Join(", ", book.Author.Select(a => a.AuthorName)) : "Unknown",
                 PublicationName = book.Publication?.PublicationName ?? "Unknown",
                 Genres = book.Genres!.Select(g => g.GenreName!).ToList(),
                 Badges = book.Badges!.Select(b => b.BadgeName!).ToList(),
@@ -182,14 +182,101 @@ namespace BookNest.Controllers
             return Ok(result);
         }
 
+        //[HttpPost]
+        //public async Task<IActionResult> CreateBook(CreateBookDto dto)
+        //{
+        //    bool authorExists = await _context.Authors
+        //        .AnyAsync(a => a.AuthorId == dto.BookAuthorId);
+
+        //    if (!authorExists)
+        //        return BadRequest("The specified author does not exist.");
+
+        //    bool publicationExists = await _context.Publications
+        //        .AnyAsync(p => p.PublicationId == dto.BookPublicationId);
+
+        //    if (!publicationExists)
+        //        return BadRequest("The specified publication does not exist.");
+
+        //    var book = new Book
+        //    {
+        //        BookId = Guid.NewGuid(),
+        //        BookTitle = dto.BookTitle,
+        //        BookISBN = dto.BookISBN,
+        //        BookDescription = dto.BookDescription,
+        //        BookAuthorId = dto.BookAuthorId,
+        //        BookPublicationId = dto.BookPublicationId,
+        //        BookStock = dto.BookStock,
+        //        BookPrice = dto.BookPrice,
+        //        BookRating = dto.BookRating,
+        //        BookLanguage = dto.BookLanguage,
+        //        BookFormat = dto.BookFormat,
+        //        BookSold = dto.BookSold,
+        //        DiscountPercentage = dto.DiscountPercentage,
+        //        BookReviewCount = dto.BookReviewCount,
+        //        BookFinalPrice = dto.BookFinalPrice,
+        //        IsOnSale = dto.IsOnSale,
+        //        DiscountStartDate = dto.DiscountStartDate,
+        //        DiscountEndDate = dto.DiscountEndDate,
+        //        BookAddedDate = DateTime.UtcNow
+        //    };
+
+        //    if (dto.GenreIds != null && dto.GenreIds.Any())
+        //    {
+        //        book.Genres = await _context.Genres
+        //            .Where(g => dto.GenreIds.Contains(g.GenreId))
+        //            .ToListAsync();
+        //    }
+
+        //    if (dto.BadgeIds != null && dto.BadgeIds.Any())
+        //    {
+        //        book.Badges = await _context.Badges
+        //            .Where(b => dto.BadgeIds.Contains(b.BadgeId))
+        //            .ToListAsync();
+        //    }
+
+        //    _context.Books.Add(book);
+        //    await _context.SaveChangesAsync();
+
+        //    Book? createdBook = await _context.Books
+        //        .Include(b => b.Author)
+        //        .Include(b => b.Publication)
+        //        .Include(b => b.Genres)
+        //        .Include(b => b.Badges)
+        //        .FirstOrDefaultAsync(b => b.BookId == book.BookId);
+
+        //    BookDetailDto result = new BookDetailDto
+        //    {
+        //        BookId = book.BookId,
+        //        BookTitle = book.BookTitle,
+        //        BookISBN = book.BookISBN,
+        //        BookDescription = book.BookDescription,
+        //        AuthorName = book.Author != null ? string.Join(", ", book.Author.Select(a => a.AuthorName)) : "Unknown",
+        //        PublicationName = book.Publication?.PublicationName ?? "Unknown",
+        //        Genres = book.Genres!.Select(g => g.GenreName!).ToList(),
+        //        Badges = book.Badges!.Select(b => b.BadgeName!).ToList(),
+        //        BookPrice = book.BookPrice,
+        //        BookFinalPrice = book.BookFinalPrice,
+        //        IsOnSale = book.IsOnSale,
+        //        DiscountStartDate = book.DiscountStartDate,
+        //        DiscountEndDate = book.DiscountEndDate
+        //    };
+
+        //    return CreatedAtAction(nameof(GetBookById), new { id = result.BookId }, result);
+        //}
+
         [HttpPost]
         public async Task<IActionResult> CreateBook(CreateBookDto dto)
         {
-            bool authorExists = await _context.Authors
-                .AnyAsync(a => a.AuthorId == dto.BookAuthorId);
+            if (dto.AuthorIds == null || !dto.AuthorIds.Any())
+                return BadRequest("At least one author must be specified.");
 
-            if (!authorExists)
-                return BadRequest("The specified author does not exist.");
+            // Check if all provided authors exist
+            bool allAuthorsExist = await _context.Authors
+                .Where(a => dto.AuthorIds.Contains(a.AuthorId))
+                .CountAsync() == dto.AuthorIds.Count;
+
+            if (!allAuthorsExist)
+                return BadRequest("One or more specified authors do not exist.");
 
             bool publicationExists = await _context.Publications
                 .AnyAsync(p => p.PublicationId == dto.BookPublicationId);
@@ -203,7 +290,6 @@ namespace BookNest.Controllers
                 BookTitle = dto.BookTitle,
                 BookISBN = dto.BookISBN,
                 BookDescription = dto.BookDescription,
-                BookAuthorId = dto.BookAuthorId,
                 BookPublicationId = dto.BookPublicationId,
                 BookStock = dto.BookStock,
                 BookPrice = dto.BookPrice,
@@ -220,6 +306,12 @@ namespace BookNest.Controllers
                 BookAddedDate = DateTime.UtcNow
             };
 
+            // ✅ Assign authors (many-to-many)
+            book.Author = await _context.Authors
+                .Where(a => dto.AuthorIds.Contains(a.AuthorId))
+                .ToListAsync();
+
+            // ✅ Assign genres (many-to-many)
             if (dto.GenreIds != null && dto.GenreIds.Any())
             {
                 book.Genres = await _context.Genres
@@ -227,6 +319,7 @@ namespace BookNest.Controllers
                     .ToListAsync();
             }
 
+            // ✅ Assign badges (many-to-many)
             if (dto.BadgeIds != null && dto.BadgeIds.Any())
             {
                 book.Badges = await _context.Badges
@@ -237,23 +330,26 @@ namespace BookNest.Controllers
             _context.Books.Add(book);
             await _context.SaveChangesAsync();
 
-            Book? createdBook = await _context.Books
+            // Fetch full book details after save
+            var createdBook = await _context.Books
                 .Include(b => b.Author)
                 .Include(b => b.Publication)
                 .Include(b => b.Genres)
                 .Include(b => b.Badges)
                 .FirstOrDefaultAsync(b => b.BookId == book.BookId);
 
-            BookDetailDto result = new BookDetailDto
+            var result = new BookDetailDto
             {
                 BookId = book.BookId,
                 BookTitle = book.BookTitle,
                 BookISBN = book.BookISBN,
                 BookDescription = book.BookDescription,
-                AuthorName = book.Author?.AuthorName ?? "Unknown",
-                PublicationName = book.Publication?.PublicationName ?? "Unknown",
-                Genres = book.Genres!.Select(g => g.GenreName!).ToList(),
-                Badges = book.Badges!.Select(b => b.BadgeName!).ToList(),
+                AuthorName = createdBook!.Author != null
+                    ? string.Join(", ", createdBook.Author.Select(a => a.AuthorName))
+                    : "Unknown",
+                PublicationName = createdBook.Publication?.PublicationName ?? "Unknown",
+                Genres = createdBook.Genres?.Select(g => g.GenreName!).ToList() ?? new List<string>(),
+                Badges = createdBook.Badges?.Select(b => b.BadgeName!).ToList() ?? new List<string>(),
                 BookPrice = book.BookPrice,
                 BookFinalPrice = book.BookFinalPrice,
                 IsOnSale = book.IsOnSale,
@@ -267,6 +363,7 @@ namespace BookNest.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBook(Guid id, [FromBody] UpdateBookDto dto)
         {
+
             if (id != dto.BookId)
                 return BadRequest("Book ID mismatch.");
 
@@ -278,16 +375,18 @@ namespace BookNest.Controllers
             if (book == null)
                 return NotFound("Book not found.");
 
-            bool authorExists = await _context.Authors.AnyAsync(a => a.AuthorId == dto.BookAuthorId);
+            bool allAuthorsExist = await _context.Authors
+                .Where(a => dto.AuthorIds.Contains(a.AuthorId))
+                .CountAsync() == dto.AuthorIds.Count;
             bool publicationExists = await _context.Publications.AnyAsync(p => p.PublicationId == dto.BookPublicationId);
 
-            if (!authorExists || !publicationExists)
+            if (!allAuthorsExist || !publicationExists)
                 return BadRequest("Invalid Author or Publication.");
 
             book.BookTitle = dto.BookTitle;
             book.BookISBN = dto.BookISBN;
             book.BookDescription = dto.BookDescription;
-            book.BookAuthorId = dto.BookAuthorId;
+            //book.BookAuthorId = dto.BookAuthorId;
             book.BookPublicationId = dto.BookPublicationId;
             book.BookStock = dto.BookStock;
             book.BookPrice = dto.BookPrice;

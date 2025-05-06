@@ -17,9 +17,9 @@ namespace BookNest.Data.Entities
         [MaxLength(2000)]
         public string? BookDescription { get; set; }
 
-        public Guid BookAuthorId { get; set; }
+        //public Guid BookAuthorId { get; set; }
 
-        public Author? Author { get; set; }
+        //public Author? Author { get; set; }
 
         public int BookStock { get; set; }
 
@@ -58,5 +58,8 @@ namespace BookNest.Data.Entities
         public ICollection<Genre>? Genres { get; set; }
 
         public ICollection<Badge>? Badges { get; set; }
+
+        public ICollection<Author>? Author { get; set; }
+
     }
 }
