@@ -58,8 +58,12 @@ namespace BookNest.Data
 
             //Whitelist
             modelBuilder.Entity<Whitelist>()
-                .ToTable("Whitelists")
-                .HasKey(w => w.Id);
+                .HasOne(w => w.Book)
+                .WithMany()
+                .HasForeignKey(w => w.BookId)
+                .OnDelete(DeleteBehavior.Cascade);  // or .OnDelete(DeleteBehavior.Restrict) depending on your needs
+
+
 
         }
 

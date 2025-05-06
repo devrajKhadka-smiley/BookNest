@@ -4,7 +4,6 @@ using BookNest.Data.Entities;
 using BookNest.Models.Dto;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace BookNest.Controllers
 {
     [Route("api/[controller]")]
@@ -28,7 +27,7 @@ namespace BookNest.Controllers
                 {
                     Id = w.Id,
                     UserId = w.UserId,
-                    BookId = w.BookId,  
+                    BookId = w.BookId,
                     AddedDate = w.AddedDate
                 })
                 .ToListAsync();
@@ -43,8 +42,8 @@ namespace BookNest.Controllers
             var whitelist = new Whitelist
             {
                 UserId = dto.UserId,
-                BookId = dto.BookId,  
-                AddedDate = DateTime.Now
+                BookId = dto.BookId,
+                AddedDate = DateTime.UtcNow // ✅ Save in UTC to fix PostgreSQL issue
             };
 
             _context.Whitelists.Add(whitelist);
@@ -70,5 +69,4 @@ namespace BookNest.Controllers
             return NoContent();
         }
     }
-
 }

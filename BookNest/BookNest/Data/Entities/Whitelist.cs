@@ -21,6 +21,7 @@ namespace BookNest.Data.Entities
         // Navigation property
         public Book Book { get; set; }
 
-        public DateTime AddedDate { get; set; } = DateTime.Now;
+        public DateTime AddedDate { get; set; } = DateTime.UtcNow;  
+
     }
 }
