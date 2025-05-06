@@ -20,6 +20,10 @@ namespace BookNest.Data
         public DbSet<Genre> Genres { get; set; }
         public DbSet<Badge> Badges { get; set; }
 
+
+        // Whitelist table
+        public DbSet<Whitelist> Whitelists { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -50,6 +54,13 @@ namespace BookNest.Data
                 .HasMany(b => b.Badges)
                 .WithMany(g => g.Books)
                 .UsingEntity(j => j.ToTable("BooksBadge"));
+
+
+            //Whitelist
+            modelBuilder.Entity<Whitelist>()
+                .ToTable("Whitelists")
+                .HasKey(w => w.Id);
+
         }
 
 
