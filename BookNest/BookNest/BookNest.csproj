@@ -18,4 +18,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\Dto\NewFolder1\" />
+    <Folder Include="Models\Dto\NewFolder\" />
+  </ItemGroup>
+
 </Project>

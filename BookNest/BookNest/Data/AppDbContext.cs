@@ -22,6 +22,10 @@ namespace BookNest.Data
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
 
+
+        // Whitelist table
+        public DbSet<Whitelist> Whitelists { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -53,8 +57,6 @@ namespace BookNest.Data
                 .WithMany(g => g.Books)
                 .UsingEntity(j => j.ToTable("BooksBadge"));
 
-
-
             //-------Cart content
             modelBuilder.Entity<Cart>()
             .HasIndex(c => c.UserId)
@@ -69,8 +71,13 @@ namespace BookNest.Data
                 .HasOne(ci => ci.Book)
                 .WithMany()
                 .HasForeignKey(ci => ci.BookId);
+
+            //Whitelist
+            modelBuilder.Entity<Whitelist>()
+                .HasOne(w => w.Book)
+                .WithMany()
+                .HasForeignKey(w => w.BookId)
+                .OnDelete(DeleteBehavior.Cascade);  
         }
-
-
     }
 }
