@@ -6,6 +6,6 @@
         public long UserId { get; set; }  
         public Guid BookId { get; set; }
 
-        public DateTime AddedDate { get; set; }
+        //public DateTime AddedDate { get; set; }
     }
 }

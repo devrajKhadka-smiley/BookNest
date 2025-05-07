@@ -28,7 +28,7 @@ namespace BookNest.Controllers
                     Id = w.Id,
                     UserId = w.UserId,
                     BookId = w.BookId,
-                    AddedDate = w.AddedDate
+                    //AddedDate = w.AddedDate
                 })
                 .ToListAsync();
 
@@ -39,18 +39,26 @@ namespace BookNest.Controllers
         [HttpPost]
         public async Task<ActionResult<WhitelistDto>> AddToWhitelist(WhitelistDto dto)
         {
+            bool alreadyExists = await _context.Whitelists
+        .AnyAsync(w => w.UserId == dto.UserId && w.BookId == dto.BookId);
+
+            if (alreadyExists)
+            {
+                return Conflict(new { message = "Product already exists in wishlist." });
+            }
+
             var whitelist = new Whitelist
             {
                 UserId = dto.UserId,
                 BookId = dto.BookId,
-                AddedDate = DateTime.UtcNow // ✅ Save in UTC to fix PostgreSQL issue
+                AddedDate = DateTime.UtcNow
             };
 
             _context.Whitelists.Add(whitelist);
             await _context.SaveChangesAsync();
 
             dto.Id = whitelist.Id;
-            dto.AddedDate = whitelist.AddedDate;
+            //dto.AddedDate = whitelist.AddedDate;
 
             return CreatedAtAction(nameof(GetUserWhitelist), new { userId = dto.UserId }, dto);
         }
