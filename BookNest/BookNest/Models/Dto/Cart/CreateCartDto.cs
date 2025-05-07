@@ -1,4 +1,4 @@
-﻿namespace BookNest.Controllers
+﻿namespace BookNest.Models.Dto.Cart
 {
     public class CreateCartDto
     {
