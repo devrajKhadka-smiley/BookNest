@@ -21,7 +21,8 @@ namespace BookNest.Data
         public DbSet<Badge> Badges { get; set; }
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
-
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
 
         // Whitelist table
         public DbSet<Whitelist> Whitelists { get; set; }
@@ -72,12 +73,26 @@ namespace BookNest.Data
                 .WithMany()
                 .HasForeignKey(ci => ci.BookId);
 
+            modelBuilder.Entity<Order>()
+                .HasIndex(o => o.UserId)
+                .IsUnique();
+
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.User)
+                .WithOne(u => u.Order)
+                .HasForeignKey<Order>(o => o.UserId);
+
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.Book)
+                .WithMany()
+                .HasForeignKey(oi => oi.BookId);
+
             //Whitelist
             modelBuilder.Entity<Whitelist>()
                 .HasOne(w => w.Book)
                 .WithMany()
                 .HasForeignKey(w => w.BookId)
-                .OnDelete(DeleteBehavior.Cascade);  
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

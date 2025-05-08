@@ -18,5 +18,6 @@ namespace BookNest.Data.Entities
 
         //--cart 
         public Cart Cart { get; set; }
+        public Order Order { get; set; }
     }
 }
