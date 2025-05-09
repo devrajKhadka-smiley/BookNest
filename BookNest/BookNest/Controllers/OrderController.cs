@@ -39,9 +39,15 @@ namespace BookNest.Controllers
 
             foreach (var cartItem in cart.Items)
             {
+                if (cartItem.Quantity <= 0)
+                    return BadRequest($"Cart item with ID {cartItem.Id} has invalid quantity.");
+
                 var book = await _context.Books.FindAsync(cartItem.BookId);
                 if (book == null)
                     return NotFound($"Book with ID {cartItem.BookId} not found");
+
+                if (book.BookStock < cartItem.Quantity)
+                    return BadRequest($"Insufficient stock for book: {book.BookTitle}");
 
                 book.BookStock -= cartItem.Quantity;
 

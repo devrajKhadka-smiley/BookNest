@@ -74,8 +74,7 @@ namespace BookNest.Data
                 .HasForeignKey(ci => ci.BookId);
 
             modelBuilder.Entity<Order>()
-                .HasIndex(o => o.UserId)
-                .IsUnique();
+                .HasIndex(o => o.UserId);
 
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.User)
