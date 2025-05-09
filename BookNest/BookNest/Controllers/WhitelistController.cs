@@ -19,37 +19,48 @@ namespace BookNest.Controllers
 
         // GET: api/Whitelist/user/5
         [HttpGet("user/{userId}")]
-        public async Task<ActionResult<IEnumerable<WhitelistDto>>> GetUserWhitelist(int userId)
+        public async Task<ActionResult<IEnumerable<object>>> GetUserWhitelist(long userId)
         {
             var whitelist = await _context.Whitelists
                 .Where(w => w.UserId == userId)
-                .Select(w => new WhitelistDto
+                .Include(w => w.Book)
+                .Select(w => new
                 {
-                    Id = w.Id,
-                    UserId = w.UserId,
-                    BookId = w.BookId,
-                    //AddedDate = w.AddedDate
+                    w.Id,
+                    w.UserId,
+                    w.BookId,
+                    BookTitle = w.Book.BookTitle,
+                    BookPrice = w.Book.BookPrice,
+                    BookPublisher = w.Book.Publication.PublicationName,
                 })
                 .ToListAsync();
 
             return Ok(whitelist);
         }
 
-        // POST: api/Whitelist
-        [HttpPost]
-        public async Task<ActionResult<WhitelistDto>> AddToWhitelist(WhitelistDto dto)
+        // POST: api/Whitelist/add/{userId}
+        [HttpPost("add/{userId}")]
+        public async Task<IActionResult> AddToWhitelist(long userId, [FromBody] WhitelistDto dto)
         {
+            // Check if book exists
+            var bookExists = await _context.Books.AnyAsync(b => b.BookId == dto.BookId);
+            if (!bookExists)
+            {
+                return NotFound("Book not found.");
+            }
+
+            // Check if already in whitelist
             bool alreadyExists = await _context.Whitelists
-        .AnyAsync(w => w.UserId == dto.UserId && w.BookId == dto.BookId);
+                .AnyAsync(w => w.UserId == userId && w.BookId == dto.BookId);
 
             if (alreadyExists)
             {
-                return Conflict(new { message = "Product already exists in wishlist." });
+                return Conflict(new { message = "Book already exists in wishlist." });
             }
 
             var whitelist = new Whitelist
             {
-                UserId = dto.UserId,
+                UserId = userId,
                 BookId = dto.BookId,
                 AddedDate = DateTime.UtcNow
             };
@@ -57,24 +68,25 @@ namespace BookNest.Controllers
             _context.Whitelists.Add(whitelist);
             await _context.SaveChangesAsync();
 
-            dto.Id = whitelist.Id;
-            //dto.AddedDate = whitelist.AddedDate;
-
-            return CreatedAtAction(nameof(GetUserWhitelist), new { userId = dto.UserId }, dto);
+            return Ok(new { message = "Book added to wishlist." });
         }
 
-        // DELETE: api/Whitelist/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> RemoveFromWhitelist(int id)
+        // DELETE: api/Whitelist/remove/{userId}/{bookId}
+        [HttpDelete("remove/{userId}/{bookId}")]
+        public async Task<IActionResult> RemoveFromWhitelist(long userId, Guid bookId)
         {
-            var entry = await _context.Whitelists.FindAsync(id);
+            var entry = await _context.Whitelists
+                .FirstOrDefaultAsync(w => w.UserId == userId && w.BookId == bookId);
+
             if (entry == null)
-                return NotFound();
+            {
+                return NotFound("Entry not found in wishlist.");
+            }
 
             _context.Whitelists.Remove(entry);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = "Book successfully removed from wishlist." });
         }
     }
 }

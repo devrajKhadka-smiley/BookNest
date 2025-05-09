@@ -9,7 +9,7 @@ namespace BookNest.Data.Entities
         [Key]
         public int Id { get; set; }
 
-        [Required]
+    
         public long UserId { get; set; }
 
         [Required]
