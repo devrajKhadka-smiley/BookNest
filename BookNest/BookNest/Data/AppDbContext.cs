@@ -23,7 +23,7 @@ namespace BookNest.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
-
+        public DbSet<Review> Reviews { get; set; }
         // Whitelist table
         public DbSet<Whitelist> Whitelists { get; set; }
 
