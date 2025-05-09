@@ -160,7 +160,7 @@ namespace BookNest.Controllers
         public async Task<IActionResult> GetAllAdmin()
         {
             var allBooks = await _context.Books
-                .Include(b => b.Author)  
+                .Include(b => b.Author)
                 .Include(b => b.Publication)
                 .Include(b => b.Genres)
                 .Select(b => new ReadBookDto
@@ -179,7 +179,7 @@ namespace BookNest.Controllers
                     PublicationName = b.Publication != null ? b.Publication.PublicationName : "Unknown",
                     Genres = b.Genres != null ? b.Genres.Select(g => g.GenreName).ToList() : new List<string>()
                 })
-                .ToListAsync();  
+                .ToListAsync();
 
             return Ok(new
             {
@@ -470,6 +470,30 @@ namespace BookNest.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpGet("available-formats")]
+        public async Task<IActionResult> GetAvailableFormats()
+        {
+            var formats = await _context.Books
+                .Where(b => !string.IsNullOrEmpty(b.BookFormat))
+                .Select(b => b.BookFormat!.Trim())
+                .Distinct()
+                .ToListAsync();
+
+            return Ok(formats);
+        }
+        
+        [HttpGet("available-languages")]
+        public async Task<IActionResult> GetAvailableLanguages()
+        {
+            var languages = await _context.Books
+                .Where(b => !string.IsNullOrEmpty(b.BookLanguage))
+                .Select(b => b.BookLanguage!.Trim())
+                .Distinct()
+                .ToListAsync();
+
+            return Ok(languages);
         }
 
     }
