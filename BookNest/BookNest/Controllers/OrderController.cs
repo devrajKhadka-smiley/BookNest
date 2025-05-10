@@ -117,6 +117,8 @@ namespace BookNest.Controllers
             if (user == null)
                 return NotFound("User not found");
 
+            var membershipId = user.MemberShipId;
+
             var cart = await _context.Carts
                 .Include(c => c.Items)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
@@ -264,7 +266,7 @@ namespace BookNest.Controllers
 
             if (order.User != null)
             {
-                order.User.SuccessfulOrderCount++; // Increment order count when completed
+                order.User.SuccessfulOrderCount++; 
             }
 
             await _context.SaveChangesAsync();
