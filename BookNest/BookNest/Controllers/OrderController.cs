@@ -11,10 +11,12 @@ namespace BookNest.Controllers
     public class OrderController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _config;
 
-        public OrderController(AppDbContext context)
+        public OrderController(AppDbContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
         [HttpPost("place-order/{userId}")]
@@ -69,6 +71,40 @@ namespace BookNest.Controllers
             _context.Carts.Remove(cart);
 
             await _context.SaveChangesAsync();
+
+            //---- send the mail to user
+            try
+            {
+                var emailsettings = _config.GetSection("EmailConfig");
+                Console.WriteLine("");
+                Console.WriteLine("");
+                Console.WriteLine("");
+                Console.WriteLine($"SMTP Server: {emailsettings["SmtpServer"]}, SenderEmail: {emailsettings["SenderEmail"]}");
+                Console.WriteLine("");
+                Console.WriteLine("");
+                Console.WriteLine("");
+
+
+                var message = new MimeKit.MimeMessage();
+                message.From.Add(new MimeKit.MailboxAddress(emailsettings["SenderName"], emailsettings["SenderEmail"]));
+                message.To.Add(MimeKit.MailboxAddress.Parse(user.Email));
+                message.Subject = "Order Confirmation - BookNest";
+                message.Body = new MimeKit.TextPart(MimeKit.Text.TextFormat.Html)
+                {
+                    Text = $"<h1>Order Confirmation</h1><p>Dear {user.UserName},</p><p>Your order has been successfully placed. Thank you for shopping with us!</p><p>Best regards,<br>BookNest Team</p>"
+                };
+
+                using var smtp = new MailKit.Net.Smtp.SmtpClient();
+                await smtp.ConnectAsync(emailsettings["SmtpServer"], int.Parse(emailsettings["Port"]), MailKit.Security.SecureSocketOptions.StartTls);
+                await smtp.AuthenticateAsync(emailsettings["Username"], emailsettings["Password"]);
+                await smtp.SendAsync(message);
+                await smtp.DisconnectAsync(true);
+            }
+            catch (Exception ex)
+            {
+                
+                Console.WriteLine($"Email failed: {ex.Message}");
+            }
 
             return Ok("Order Placed");
         }
