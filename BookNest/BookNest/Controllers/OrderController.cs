@@ -117,8 +117,6 @@ namespace BookNest.Controllers
             if (user == null)
                 return NotFound("User not found");
 
-            var membershipId = user.MemberShipId;
-
             var cart = await _context.Carts
                 .Include(c => c.Items)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
@@ -126,8 +124,9 @@ namespace BookNest.Controllers
             if (cart == null || !cart.Items.Any())
                 return BadRequest("Cart is empty or does not exist");
 
-            // Step 1: Generate OTP and store it in the order
+            // Step 1: Generate OTP
             var otp = GenerateOtpService.GenerateOtp(4);
+
             // Fetch books in bulk
             var bookIds = cart.Items.Select(i => i.BookId).ToList();
             var books = await _context.Books
@@ -141,6 +140,7 @@ namespace BookNest.Controllers
                 CreatedAt = DateTime.UtcNow,
                 ClaimCode = otp,
                 Status = "In Process",
+                MembershipId = user.MemberShipId,
                 Items = new List<OrderItem>()
             };
 
@@ -175,18 +175,20 @@ namespace BookNest.Controllers
                 order.Items.Add(orderItem);
             }
 
+            // --- Discount Logic ---
 
             decimal discountRate = 0m;
 
-            // Check if user qualifies for order-based discounts
-            if (user.SuccessfulOrderCount >= FiveOrderThreshold)
+            // 5% discount if ordering 5+ books in this order
+            if (totalBookCount >= 5)
             {
-                discountRate += FiveOrderDiscountRate; 
+                discountRate += 0.05m; // 5%
+            }
 
-                if (user.SuccessfulOrderCount >= TenOrderThreshold)
-                {
-                    discountRate += TenOrderExtraDiscountRate; 
-                }
+            //  Extra 10% discount if user has 10+ successful past orders
+            if (user.SuccessfulOrderCount >= 10)
+            {
+                discountRate += 0.10m; // 10%
             }
 
             decimal finalAmount = totalPrice * (1 - discountRate);
@@ -202,16 +204,16 @@ namespace BookNest.Controllers
             await _context.SaveChangesAsync();
 
             // Discount message
-            string discountMessage = "No Discount";
+            string discountMessage = "No Discount Applied";
 
-            if (user.SuccessfulOrderCount >= TenOrderThreshold)
-                discountMessage = "5% Discount (5+ Orders) + 10% Extra Discount (10+ Orders) Applied (Total 15%)";
-            else if (user.SuccessfulOrderCount >= FiveOrderThreshold)
-                discountMessage = "5% Discount (5+ Orders) Applied";
-            else
-                discountMessage = "No Discount (Less than 5 Orders)";
+            if (totalBookCount >= 5 && user.SuccessfulOrderCount >= 10)
+                discountMessage = "5% Discount (5+ Books in Order) + 10% Extra Discount (10+ Successful Orders) Applied (Total 15%)";
+            else if (totalBookCount >= 5)
+                discountMessage = "5% Discount (5+ Books in Order) Applied";
+            else if (user.SuccessfulOrderCount >= 10)
+                discountMessage = "10% Extra Discount (10+ Successful Orders) Applied";
 
-
+            // Send email
             try
             {
                 var emailsettings = _config.GetSection("EmailConfig");
@@ -236,8 +238,6 @@ namespace BookNest.Controllers
                 Console.WriteLine($"Email failed: {ex.Message}");
             }
 
-            // return Ok("Order Placed");
-
             return Ok(new
             {
                 Message = "Order Placed",
@@ -249,6 +249,7 @@ namespace BookNest.Controllers
             });
         }
 
+        // Complete Order Logic
         [HttpPost("complete-order/{orderId}")]
         public async Task<IActionResult> CompleteOrder(Guid orderId)
         {
@@ -266,7 +267,7 @@ namespace BookNest.Controllers
 
             if (order.User != null)
             {
-                order.User.SuccessfulOrderCount++; 
+                order.User.SuccessfulOrderCount++;
             }
 
             await _context.SaveChangesAsync();
@@ -275,9 +276,10 @@ namespace BookNest.Controllers
             {
                 Message = "Order completed and user record updated.",
                 OrderId = order.Id,
-                UserSuccessfulOrderCount = order.User.SuccessfulOrderCount,
+                UserSuccessfulOrderCount = order.User?.SuccessfulOrderCount,
                 OrderStatus = order.Status
             });
         }
+
     };
 }
