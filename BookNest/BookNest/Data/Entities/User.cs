@@ -1,14 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BookNest.Data.Entities
 {
-    //[Index(nameof(Email), IsUnique = true)]
-    //[Index(nameof(UserName), IsUnique = true)]
-    //[Index(nameof(PhoneNumber), IsUnique = true)]
-    //[Index(nameof(MemberShipId), IsUnique = true)]
     public class User : IdentityUser<long>
     {
         public string? Firstname { get; set; }
@@ -22,5 +17,16 @@ namespace BookNest.Data.Entities
         //-- Navigation Properties
         public Cart Cart { get; set; }
         public Order Order { get; set; }
+
+        // ✅ Check if user is a member (MembershipId present)
+        [NotMapped]
+        public bool IsMember => !string.IsNullOrEmpty(MemberShipId);
+
+        // ✅ Optional: Get basic 5% member discount
+        public decimal GetMemberDiscount()
+        {
+            const decimal MemberDiscountRate = 0.05m;
+            return IsMember ? MemberDiscountRate : 0m;
+        }
     }
 }
