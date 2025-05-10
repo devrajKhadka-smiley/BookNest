@@ -4,7 +4,6 @@ using BookNest.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace BookNest.Controllers
 {
     [Route("api/[controller]")]
@@ -13,6 +12,13 @@ namespace BookNest.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _config;
+
+        // public OrderController(AppDbContext context, IConfiguration config)
+        // Discount constants
+        private const decimal FiveOrderDiscountRate = 0.05m; // 5% discount for 5+ orders
+        private const decimal TenOrderExtraDiscountRate = 0.10m; // extra 10% for 10+ orders
+        private const int FiveOrderThreshold = 5;
+        private const int TenOrderThreshold = 10;
 
         public OrderController(AppDbContext context, IConfiguration config)
         {
@@ -119,41 +125,72 @@ namespace BookNest.Controllers
                 return BadRequest("Cart is empty or does not exist");
 
             // Step 1: Generate OTP and store it in the order
-            var otp = GenerateOtpService.GenerateOtp(4); 
+            var otp = GenerateOtpService.GenerateOtp(4);
+            // Fetch books in bulk
+            var bookIds = cart.Items.Select(i => i.BookId).ToList();
+            var books = await _context.Books
+                .Where(b => bookIds.Contains(b.BookId))
+                .ToDictionaryAsync(b => b.BookId);
+
             var order = new Order
             {
+                Id = Guid.NewGuid(),
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
                 ClaimCode = otp,
+                Status = "In Process",
+                Items = new List<OrderItem>()
             };
 
-            
+            int totalBookCount = 0;
+            decimal totalPrice = 0;
+
             foreach (var cartItem in cart.Items)
             {
                 if (cartItem.Quantity <= 0)
                     return BadRequest($"Cart item with ID {cartItem.Id} has invalid quantity.");
 
-                var book = await _context.Books.FindAsync(cartItem.BookId);
-                if (book == null)
+                if (!books.TryGetValue(cartItem.BookId, out var book))
                     return NotFound($"Book with ID {cartItem.BookId} not found");
 
                 if (book.BookStock < cartItem.Quantity)
                     return BadRequest($"Insufficient stock for book: {book.BookTitle}");
 
                 book.BookStock -= cartItem.Quantity;
+                totalBookCount += cartItem.Quantity;
+
+                var price = book.BookFinalPrice * cartItem.Quantity;
+                totalPrice += price;
 
                 var orderItem = new OrderItem
                 {
                     BookId = book.BookId,
                     Quantity = cartItem.Quantity,
                     PriceAtPurchase = book.BookFinalPrice,
-                    OrderId = order.Id,
+                    Order = order
                 };
 
                 order.Items.Add(orderItem);
             }
 
-           
+
+            decimal discountRate = 0m;
+
+            // Check if user qualifies for order-based discounts
+            if (user.SuccessfulOrderCount >= FiveOrderThreshold)
+            {
+                discountRate += FiveOrderDiscountRate; 
+
+                if (user.SuccessfulOrderCount >= TenOrderThreshold)
+                {
+                    discountRate += TenOrderExtraDiscountRate; 
+                }
+            }
+
+            decimal finalAmount = totalPrice * (1 - discountRate);
+            order.TotalAmount = finalAmount;
+
+            // Save order and clear cart
             _context.Orders.Add(order);
             _context.OrderItems.AddRange(order.Items);
 
@@ -162,7 +199,17 @@ namespace BookNest.Controllers
 
             await _context.SaveChangesAsync();
 
-            
+            // Discount message
+            string discountMessage = "No Discount";
+
+            if (user.SuccessfulOrderCount >= TenOrderThreshold)
+                discountMessage = "5% Discount (5+ Orders) + 10% Extra Discount (10+ Orders) Applied (Total 15%)";
+            else if (user.SuccessfulOrderCount >= FiveOrderThreshold)
+                discountMessage = "5% Discount (5+ Orders) Applied";
+            else
+                discountMessage = "No Discount (Less than 5 Orders)";
+
+
             try
             {
                 var emailsettings = _config.GetSection("EmailConfig");
@@ -187,8 +234,48 @@ namespace BookNest.Controllers
                 Console.WriteLine($"Email failed: {ex.Message}");
             }
 
-            return Ok("Order Placed");
+            // return Ok("Order Placed");
+
+            return Ok(new
+            {
+                Message = "Order Placed",
+                OrderId = order.Id,
+                BooksOrdered = totalBookCount,
+                DiscountApplied = discountMessage,
+                FinalAmount = finalAmount,
+                OrderStatus = order.Status
+            });
         }
 
-    }
+        [HttpPost("complete-order/{orderId}")]
+        public async Task<IActionResult> CompleteOrder(Guid orderId)
+        {
+            var order = await _context.Orders
+                .Include(o => o.User)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+                return NotFound("Order not found");
+
+            if (order.Status != "In Process")
+                return BadRequest("Order is already completed or invalid.");
+
+            order.Status = "Completed";
+
+            if (order.User != null)
+            {
+                order.User.SuccessfulOrderCount++; // Increment order count when completed
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Order completed and user record updated.",
+                OrderId = order.Id,
+                UserSuccessfulOrderCount = order.User.SuccessfulOrderCount,
+                OrderStatus = order.Status
+            });
+        }
+    };
 }
