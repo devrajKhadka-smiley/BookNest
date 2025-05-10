@@ -9,13 +9,12 @@ namespace BookNest.Data.Entities
         public long UserId { get; set; }
         public string MembershipId { get; set; }
         public bool OrderReceived { get; set; } = false;
-        // public List<OrderItem> Items { get; set;} = new List<OrderItem>();
         public string? ClaimCode { get; set; }
-        public List<OrderItem> Items { get; set; } = new List<OrderItem>();
         public User? User { get; set; }
-
         public decimal TotalAmount { get; set; }
         public string Status { get; set; }
+
+        public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
         public Order()
         {

@@ -8,13 +8,9 @@
 
   <ItemGroup>
     <Compile Remove="Models\Dto\NewFolder1\**" />
-    <Compile Remove="Models\Dto\NewFolder\**" />
     <Content Remove="Models\Dto\NewFolder1\**" />
-    <Content Remove="Models\Dto\NewFolder\**" />
     <EmbeddedResource Remove="Models\Dto\NewFolder1\**" />
-    <EmbeddedResource Remove="Models\Dto\NewFolder\**" />
     <None Remove="Models\Dto\NewFolder1\**" />
-    <None Remove="Models\Dto\NewFolder\**" />
   </ItemGroup>
 
   <ItemGroup>

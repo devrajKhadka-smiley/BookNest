@@ -23,7 +23,7 @@ namespace BookNest.Controllers
         {
             var hasPurchased = await _context.Orders
                 .Where(o => o.UserId == dto.UserId && o.OrderReceived)
-                .SelectMany(o => o.Items)
+                .SelectMany(o => o.OrderItems)
                 .AnyAsync(oi => oi.BookId == dto.BookId);
 
             if (!hasPurchased)

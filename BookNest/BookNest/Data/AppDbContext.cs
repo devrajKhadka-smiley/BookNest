@@ -92,6 +92,12 @@ namespace BookNest.Data
                 .WithMany()
                 .HasForeignKey(w => w.BookId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Order>()
+            .HasMany(o => o.OrderItems)
+            .WithOne(oi => oi.Order)
+            .HasForeignKey(oi => oi.OrderId);
+
         }
     }
 }
