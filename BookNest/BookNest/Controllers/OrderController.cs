@@ -185,8 +185,8 @@ namespace BookNest.Controllers
                 discountRate += 0.05m; // 5%
             }
 
-            //  Extra 10% discount if user has 10+ successful past orders
-            if (user.SuccessfulOrderCount >= 10)
+            // Extra 10% discount only when user has 10, 20, 30... successful past orders
+            if (user.SuccessfulOrderCount > 0 && user.SuccessfulOrderCount % 10 == 0)
             {
                 discountRate += 0.10m; // 10%
             }
@@ -203,15 +203,18 @@ namespace BookNest.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Discount message
+            // Discount message logic
+            bool isFiveBooksDiscount = totalBookCount >= 5;
+            bool isTenOrdersDiscount = user.SuccessfulOrderCount > 0 && user.SuccessfulOrderCount % 10 == 0;
+
             string discountMessage = "No Discount Applied";
 
-            if (totalBookCount >= 5 && user.SuccessfulOrderCount >= 10)
-                discountMessage = "5% Discount (5+ Books in Order) + 10% Extra Discount (10+ Successful Orders) Applied (Total 15%)";
-            else if (totalBookCount >= 5)
+            if (isFiveBooksDiscount && isTenOrdersDiscount)
+                discountMessage = "5% Discount (5+ Books in Order) + 10% Extra Discount (Reached 10/20/30+ Successful Orders) Applied (Total 15%)";
+            else if (isFiveBooksDiscount)
                 discountMessage = "5% Discount (5+ Books in Order) Applied";
-            else if (user.SuccessfulOrderCount >= 10)
-                discountMessage = "10% Extra Discount (10+ Successful Orders) Applied";
+            else if (isTenOrdersDiscount)
+                discountMessage = "10% Extra Discount (Reached 10/20/30+ Successful Orders) Applied";
 
             // Send email
             try
@@ -248,6 +251,7 @@ namespace BookNest.Controllers
                 OrderStatus = order.Status
             });
         }
+
 
         // Complete Order Logic
         [HttpPost("complete-order/{orderId}")]
