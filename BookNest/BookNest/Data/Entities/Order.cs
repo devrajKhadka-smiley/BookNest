@@ -9,6 +9,7 @@ namespace BookNest.Data.Entities
         public long UserId { get; set; }
         public bool OrderReceived { get; set; } = false;
         public List<OrderItem> Items { get; set;} = new List<OrderItem>();
+        public string? ClaimCode { get; set; }
         public User? User { get; set; }
     }
 }
