@@ -11,18 +11,15 @@ namespace BookNest.Data.Entities
         public string? Address { get; set; }
         public string? MemberShipId { get; set; }
 
-        // Track number of successful orders for stackable discount
         public int SuccessfulOrderCount { get; set; } = 0;
 
         //-- Navigation Properties
         public Cart Cart { get; set; }
         public Order Order { get; set; }
 
-        // ✅ Check if user is a member (MembershipId present)
         [NotMapped]
         public bool IsMember => !string.IsNullOrEmpty(MemberShipId);
 
-        // ✅ Optional: Get basic 5% member discount
         public decimal GetMemberDiscount()
         {
             const decimal MemberDiscountRate = 0.05m;

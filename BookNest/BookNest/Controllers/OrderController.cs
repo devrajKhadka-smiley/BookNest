@@ -1,5 +1,6 @@
 ﻿using BookNest.Data;
 using BookNest.Data.Entities;
+using BookNest.Models.Dto;
 using BookNest.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -138,6 +139,7 @@ namespace BookNest.Controllers
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
+                MembershipId = membershipId,
                 CreatedAt = DateTime.UtcNow,
                 ClaimCode = otp,
                 Status = "In Process",
@@ -181,11 +183,11 @@ namespace BookNest.Controllers
             // Check if user qualifies for order-based discounts
             if (user.SuccessfulOrderCount >= FiveOrderThreshold)
             {
-                discountRate += FiveOrderDiscountRate; 
+                discountRate += FiveOrderDiscountRate;
 
                 if (user.SuccessfulOrderCount >= TenOrderThreshold)
                 {
-                    discountRate += TenOrderExtraDiscountRate; 
+                    discountRate += TenOrderExtraDiscountRate;
                 }
             }
 
@@ -249,35 +251,109 @@ namespace BookNest.Controllers
             });
         }
 
-        [HttpPost("complete-order/{orderId}")]
-        public async Task<IActionResult> CompleteOrder(Guid orderId)
+        //[HttpPost("complete-order/{orderId}")]
+        //public async Task<IActionResult> CompleteOrder(Guid orderId)
+        //{
+        //    var order = await _context.Orders
+        //        .Include(o => o.User)
+        //        .FirstOrDefaultAsync(o => o.Id == orderId);
+
+        //    if (order == null)
+        //        return NotFound("Order not found");
+
+        //    if (order.Status != "In Process")
+        //        return BadRequest("Order is already completed or invalid.");
+
+        //    order.Status = "Completed";
+
+        //    if (order.User != null)
+        //    {
+        //        order.User.SuccessfulOrderCount++; 
+        //    }
+
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok(new
+        //    {
+        //        Message = "Order completed and user record updated.",
+        //        OrderId = order.Id,
+        //        UserSuccessfulOrderCount = order.User.SuccessfulOrderCount,
+        //        OrderStatus = order.Status
+        //    });
+        //}
+
+
+        [HttpPost("ViewOrderByStaff")]
+        public async Task<IActionResult> ViewOrderByStaff([FromBody] StaffOrderDto request)
         {
             var order = await _context.Orders
                 .Include(o => o.User)
-                .FirstOrDefaultAsync(o => o.Id == orderId);
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Book)
+                .FirstOrDefaultAsync(o => o.Id == request.OrderId);
 
             if (order == null)
                 return NotFound("Order not found");
 
             if (order.Status != "In Process")
-                return BadRequest("Order is already completed or invalid.");
+                return BadRequest("No active order found");
+
+            if (order.User.MemberShipId != request.MembershipId)
+                return BadRequest("Membership ID does not match the order's user.");
+
+            var orderDetails = order.Items.Select(i => new
+            {
+                BookTitle = i.Book?.BookTitle ?? "Unknown",
+                Quantity = i.Quantity,
+                UnitPrice = i.PriceAtPurchase,
+                SubTotal = i.Quantity * i.PriceAtPurchase
+            });
+
+            return Ok(new
+            {
+                OrderId = order.Id,
+                OrderDate = order.CreatedAt,
+                Status = order.Status,
+                UserName = order.User.UserName,
+                Email = order.User.Email,
+                OrderDetails = orderDetails,
+                TotalAmount = order.TotalAmount
+            });
+        }
+
+        [HttpPost("UpdateOrderStaff")]
+        public async Task<IActionResult> UpdateOrderStaff([FromBody] StaffOrderDto request)
+        {
+            var order = await _context.Orders
+        .Include(o => o.User)
+        .FirstOrDefaultAsync(o => o.Id == request.OrderId);
+
+            if (order == null)
+                return NotFound("Order not found");
+
+            if (order.Status != "In Process")
+                return BadRequest("No active order found");
+
+            if (order.User.MemberShipId != request.MembershipId)
+                return BadRequest("Invalid OTP / Claim Code.");
 
             order.Status = "Completed";
+            order.OrderReceived = true;
+            //order.OrderReceivedAt = DateTime.UtcNow;
 
-            if (order.User != null)
-            {
-                order.User.SuccessfulOrderCount++; 
-            }
+            order.User.SuccessfulOrderCount += 1;
 
             await _context.SaveChangesAsync();
 
             return Ok(new
             {
-                Message = "Order completed and user record updated.",
+                Message = "Order verified and marked as Delivered",
                 OrderId = order.Id,
-                UserSuccessfulOrderCount = order.User.SuccessfulOrderCount,
-                OrderStatus = order.Status
+                User = order.User.UserName,
+                Status = order.Status
             });
+
         }
-    };
+
+    }
 }
