@@ -1,6 +1,7 @@
 using BookNest.Data;
 using BookNest.Data.Entities;
 using BookNest.Data.Seeders;
+using BookNest.Hubs;
 using BookNest.Models;
 using BookNest.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -74,6 +75,8 @@ builder.Services.AddAuthentication(options =>
 });
 //----------------End of JWT Registration----------------
 
+builder.Services.AddSignalR();
+
 builder.Services.AddSwaggerGen(options =>
 {
     // Other Swagger config (title, version, etc.)
@@ -111,7 +114,7 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-app.UseCors("AllowReactApp");
+
 
 
 using (var scope = app.Services.CreateScope())
@@ -135,11 +138,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowReactApp");
+
+app.UseRouting();
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<OrderHub>("/orderHub");
 
 app.Run();

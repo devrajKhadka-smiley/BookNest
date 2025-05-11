@@ -24,6 +24,7 @@ namespace BookNest.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<Announcement> Announcements { get; set; }
         // Whitelist table
         public DbSet<Whitelist> Whitelists { get; set; }
 
