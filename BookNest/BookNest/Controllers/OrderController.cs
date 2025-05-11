@@ -8,6 +8,8 @@ using MimeKit;
 using MailKit.Net.Smtp;
 using MimeKit.Text;
 using MailKit.Security;
+using Microsoft.AspNetCore.SignalR;
+using BookNest.Hubs;
 
 namespace BookNest.Controllers
 {
@@ -17,16 +19,18 @@ namespace BookNest.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _config;
+        private readonly IHubContext<OrderHub> _hubContext;
 
         private const decimal FiveOrderDiscountRate = 0.05m;
         private const decimal TenOrderExtraDiscountRate = 0.10m;
         private const int FiveOrderThreshold = 5;
         private const int TenOrderThreshold = 10;
 
-        public OrderController(AppDbContext context, IConfiguration config)
+        public OrderController(AppDbContext context, IConfiguration config, IHubContext<OrderHub> hubContext)
         {
             _context = context;
             _config = config;
+            _hubContext = hubContext;
         }
 
 
@@ -124,6 +128,7 @@ namespace BookNest.Controllers
 
             user.SuccessfulOrderCount += 1;
             await _context.SaveChangesAsync();
+
 
             bool isFiveBooksDiscount = totalBookCount >= 5;
             bool isTenOrdersDiscount = user.SuccessfulOrderCount > 0 && user.SuccessfulOrderCount % 10 == 1;
@@ -228,14 +233,77 @@ namespace BookNest.Controllers
 
 
 
+        //[HttpPost("UpdateOrderStaff")]
+        //public async Task<IActionResult> UpdateOrderStaff([FromBody] StaffOrderDto request)
+        //{
+        //    var order = await _context.Orders
+        //        .Include(o => o.User)
+        //        .Include(o => o.OrderItems)
+        //        .ThenInclude(od => od.Book)
+        //        .FirstOrDefaultAsync(o => o.Id == request.OrderId);
+
+        //    if (order == null)
+        //        return NotFound("Order not found");
+
+        //    if (order.Status != "In Process")
+        //        return BadRequest("No active order found");
+
+        //    if (order.User.MemberShipId != request.MembershipId)
+        //        return BadRequest("Invalid OTP / Claim Code.");
+
+        //    order.Status = "Collected";
+        //    order.OrderReceived = true;
+
+        //    // SignalR integration for live broadcast
+        //    foreach (var item in order.OrderItems)
+        //    {
+        //        var book = await _context.Books.FindAsync(item.BookId);
+        //        if (book == null) continue;
+
+        //        var message = $"Just Ordered: \"{book.BookTitle}\"!";
+
+        //        await _hubContext.Clients.All.SendAsync("ReceiveOrderBroadcast", message);
+        //    }
+
+        //    order.ClaimCode = null;
+
+
+        //    foreach (var orderDetail in order.OrderItems)
+        //    {
+        //        var book = orderDetail.Book;
+
+        //        book.BookStock -= orderDetail.Quantity;
+
+        //        if (book.BookStock < 0)
+        //        {
+        //            return BadRequest($"Insufficient stock for the book: {book.BookTitle}");
+        //        }
+
+
+        //    }
+
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok(new
+        //    {
+        //        Message = "Order verified and marked as Delivered",
+        //        OrderId = order.Id,
+        //        User = order.User.UserName,
+        //        Status = order.Status,
+        //        UserSuccessfulOrderCount = order.User?.SuccessfulOrderCount,
+        //        OrderStatus = order.Status
+        //    });
+
+        //}
+
         [HttpPost("UpdateOrderStaff")]
         public async Task<IActionResult> UpdateOrderStaff([FromBody] StaffOrderDto request)
         {
             var order = await _context.Orders
-        .Include(o => o.User)
-        .Include(o => o.OrderItems)
-        .ThenInclude(od => od.Book)
-        .FirstOrDefaultAsync(o => o.Id == request.OrderId);
+                .Include(o => o.User)
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Book)
+                .FirstOrDefaultAsync(o => o.Id == request.OrderId);
 
             if (order == null)
                 return NotFound("Order not found");
@@ -246,25 +314,39 @@ namespace BookNest.Controllers
             if (order.User.MemberShipId != request.MembershipId)
                 return BadRequest("Invalid OTP / Claim Code.");
 
+            // Step 1: Validate stock for all books BEFORE confirming order
+            foreach (var item in order.OrderItems)
+            {
+                var book = item.Book;
+                if (book == null)
+                    return BadRequest($"Book with ID {item.BookId} not found.");
+
+                if (book.BookStock < item.Quantity)
+                    return BadRequest($"Insufficient stock for the book: {book.BookTitle}");
+            }
+
+            // Step 2: Deduct stock now that validation passed
+            foreach (var item in order.OrderItems)
+            {
+                item.Book.BookStock -= item.Quantity;
+            }
+
+            // Step 3: Mark order as collected & received
             order.Status = "Collected";
             order.OrderReceived = true;
             order.ClaimCode = null;
 
-
-            foreach (var orderDetail in order.OrderItems)
+            // Step 4: Broadcast each book to connected clients
+            foreach (var item in order.OrderItems)
             {
-                var book = orderDetail.Book;
+                var book = item.Book;
+                if (book == null) continue;
 
-                book.BookStock -= orderDetail.Quantity;
-
-                if (book.BookStock < 0)
-                {
-                    return BadRequest($"Insufficient stock for the book: {book.BookTitle}");
-                }
-
-
+                var message = $"📚 Just Collected: \"{book.BookTitle}\"!";
+                await _hubContext.Clients.All.SendAsync("ReceiveOrderBroadcast", message);
             }
 
+            // Step 5: Save all changes
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -276,8 +358,9 @@ namespace BookNest.Controllers
                 UserSuccessfulOrderCount = order.User?.SuccessfulOrderCount,
                 OrderStatus = order.Status
             });
-
         }
+
+
 
         [HttpPost("CancelOrderStaff")]
         public async Task<IActionResult> CancelOrderStaff([FromBody] StaffOrderDto request)
@@ -364,5 +447,11 @@ namespace BookNest.Controllers
             }
         }
 
+        [HttpGet("send")]
+        public async Task<IActionResult> SendTestMessage()
+        {
+            await _hubContext.Clients.All.SendAsync("ReceiveOrderBroadcast", "This is a test broadcast!");
+            return Ok("Test message sent.");
+        }
     }
 }
