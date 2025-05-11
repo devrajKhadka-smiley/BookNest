@@ -312,7 +312,10 @@ namespace BookNest.Controllers
                 return BadRequest("No active order found");
 
             if (order.User.MemberShipId != request.MembershipId)
-                return BadRequest("Invalid OTP / Claim Code.");
+                return BadRequest("Invalid Membership Id");
+
+            if (order.ClaimCode == null || order.ClaimCode != request.ClaimCode)
+                return BadRequest("Invalid or expired claim code");
 
             // Step 1: Validate stock for all books BEFORE confirming order
             foreach (var item in order.OrderItems)
@@ -342,7 +345,7 @@ namespace BookNest.Controllers
                 var book = item.Book;
                 if (book == null) continue;
 
-                var message = $"📚 Just Collected: \"{book.BookTitle}\"!";
+                var message = $"{order.User.UserName} Just Collected: \"{book.BookTitle}\"!";
                 await _hubContext.Clients.All.SendAsync("ReceiveOrderBroadcast", message);
             }
 

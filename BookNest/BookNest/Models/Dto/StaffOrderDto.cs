@@ -4,6 +4,6 @@
     {
         public string? MembershipId { get; set; }
         public Guid OrderId { get; set; }
-        public int ClaimCode { get; set; }
+        public string? ClaimCode { get; set; }
     }
 }
