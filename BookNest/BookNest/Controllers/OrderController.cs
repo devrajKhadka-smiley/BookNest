@@ -297,10 +297,46 @@ namespace BookNest.Controllers
 
             order.Status = "Cancelled";
             order.OrderReceived = false;
+            order.ClaimCode = null;
 
             //order.User.SuccessfulOrderCount -= 1;
             order.User.SuccessfulOrderCount -= 1;
             Console.WriteLine("decereased successfulorder");
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                Message = "Order verified and marked as Cancelled",
+                OrderId = order.Id,
+                User = order.User.UserName,
+                Status = order.Status
+            });
+        }
+
+
+        [HttpPost("CancelOrderUser")]
+        public async Task<IActionResult> CancelOrderUser([FromBody] StaffOrderDto request)
+        {
+            var order = await _context.Orders
+        .Include(o => o.User)
+        .FirstOrDefaultAsync(o => o.Id == request.OrderId);
+
+            if (order == null)
+                return NotFound("Order not found");
+
+            if (order.Status != "In Process")
+                return BadRequest("No active order found");
+
+            if (order.User.MemberShipId != request.MembershipId)
+                return BadRequest("Invalid OTP / Claim Code.");
+
+            order.Status = "Cancelled";
+            order.OrderReceived = false;
+            order.ClaimCode = null;
+
+            //order.User.SuccessfulOrderCount -= 1;
+            order.User.SuccessfulOrderCount -= 1;
 
             await _context.SaveChangesAsync();
 
