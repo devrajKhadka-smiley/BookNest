@@ -130,7 +130,8 @@ namespace BookNest.Controllers
                 BookRating = b.BookRating,
                 AuthorName = b.Author!.Select(a => a.AuthorName!).ToList(),
                 PublicationName = b.Publication != null ? b.Publication.PublicationName! : "Unknown",
-                Genres = b.Genres!.Select(g => g.GenreName!).ToList()
+                Genres = b.Genres!.Select(g => g.GenreName!).ToList(),
+                IsDeleted = b.IsDeleted
             }).ToList();
 
             var response = new
@@ -179,7 +180,8 @@ namespace BookNest.Controllers
                     OnSale = b.IsOnSale,
                     AuthorName = b.Author!.Select(a => a.AuthorName!).ToList(),
                     PublicationName = b.Publication != null ? b.Publication.PublicationName : "Unknown",
-                    Genres = b.Genres != null ? b.Genres.Select(g => g.GenreName).ToList() : new List<string>()
+                    Genres = b.Genres != null ? b.Genres.Select(g => g.GenreName).ToList() : new List<string>(),
+                    IsDeleted = b.IsDeleted,
                 })
                 .ToListAsync();
 
@@ -215,16 +217,19 @@ namespace BookNest.Controllers
                 BookRating = book.BookRating,
                 BookFormat = book.BookFormat,
                 BookReviewCount = book.BookReviewCount,
-                AuthorName = book.Author != null ? string.Join(", ", book.Author.Select(a => a.AuthorName)) : "Unknown",
+                BookPublicationId = book.BookPublicationId,
+                BookLanguage = book.BookLanguage,
                 PublicationName = book.Publication?.PublicationName ?? "Unknown",
-                Genres = book.Genres!.Select(g => g.GenreName!).ToList(),
-                Badges = book.Badges!.Select(b => b.BadgeName!).ToList(),
+                AuthorIds = book.Author!.Select(a => a.AuthorId).ToList(),
+                GenreIds = book.Genres!.Select(g => g.GenreId).ToList(),
+                BadgeIds = book.Badges!.Select(b => b.BadgeId).ToList(),
                 BookPrice = book.BookPrice,
                 BookFinalPrice = book.BookFinalPrice,
                 IsOnSale = book.IsOnSale,
                 DiscountStartDate = book.DiscountStartDate,
                 DiscountEndDate = book.DiscountEndDate,
                 BookDiscountedPrice = book.BookDiscountedPrice,
+                IsDeleted = book.IsDeleted
             };
 
             return Ok(result);
@@ -341,12 +346,12 @@ namespace BookNest.Controllers
                 BookPublicationId = dto.BookPublicationId,
                 BookStock = dto.BookStock,
                 BookPrice = dto.BookPrice,
-                BookRating = dto.BookRating,
+                //BookRating = dto.BookRating,
                 BookLanguage = dto.BookLanguage,
                 BookFormat = dto.BookFormat,
-                BookSold = dto.BookSold,
+                //BookSold = dto.BookSold,
                 DiscountPercentage = dto.DiscountPercentage,
-                BookReviewCount = dto.BookReviewCount,
+                //BookReviewCount = dto.BookReviewCount,
                 BookFinalPrice = dto.BookFinalPrice,
                 IsOnSale = dto.IsOnSale,
                 DiscountStartDate = dto.DiscountStartDate,
@@ -355,12 +360,12 @@ namespace BookNest.Controllers
 
             };
 
-            
+
             book.Author = await _context.Authors
                 .Where(a => dto.AuthorIds.Contains(a.AuthorId))
                 .ToListAsync();
 
-            
+
             if (dto.GenreIds != null && dto.GenreIds.Any())
             {
                 book.Genres = await _context.Genres
@@ -368,7 +373,7 @@ namespace BookNest.Controllers
                     .ToListAsync();
             }
 
-           
+
             if (dto.BadgeIds != null && dto.BadgeIds.Any())
             {
                 book.Badges = await _context.Badges
@@ -379,7 +384,7 @@ namespace BookNest.Controllers
             _context.Books.Add(book);
             await _context.SaveChangesAsync();
 
-            
+
             var createdBook = await _context.Books
                 .Include(b => b.Author)
                 .Include(b => b.Publication)
@@ -394,19 +399,26 @@ namespace BookNest.Controllers
                 BookISBN = book.BookISBN,
                 BookDescription = book.BookDescription,
                 AuthorName = createdBook!.Author != null
-                    ? string.Join(", ", createdBook.Author.Select(a => a.AuthorName))
-                    : "Unknown",
+                    ? createdBook.Author.Select(a => a.AuthorName!).ToList()
+                    : new List<string>(),
                 PublicationName = createdBook.Publication?.PublicationName ?? "Unknown",
                 Genres = createdBook.Genres?.Select(g => g.GenreName!).ToList() ?? new List<string>(),
                 Badges = createdBook.Badges?.Select(b => b.BadgeName!).ToList() ?? new List<string>(),
+
+                AuthorIds = createdBook.Author?.Select(a => a.AuthorId).ToList() ?? new List<Guid>(),
+                GenreIds = createdBook.Genres?.Select(g => g.GenreId).ToList() ?? new List<Guid>(),
+                BadgeIds = createdBook.Badges?.Select(b => b.BadgeId).ToList() ?? new List<Guid>(),
+                BookPublicationId = book.BookPublicationId,
+                BookLanguage = book.BookLanguage,
                 BookPrice = book.BookPrice,
-                //BookFinalPrice = book.BookFinalPrice,
+                BookFinalPrice = book.BookFinalPrice,
                 IsOnSale = book.IsOnSale,
                 DiscountStartDate = book.DiscountStartDate,
                 DiscountEndDate = book.DiscountEndDate,
                 BookDiscountedPrice = book.BookDiscountedPrice,
-
+                IsDeleted = book.IsDeleted
             };
+
 
             return CreatedAtAction(nameof(GetBookById), new { id = result.BookId }, result);
         }
@@ -441,12 +453,12 @@ namespace BookNest.Controllers
             book.BookPublicationId = dto.BookPublicationId;
             book.BookStock = dto.BookStock;
             book.BookPrice = dto.BookPrice;
-            book.BookRating = dto.BookRating;
+            //book.BookRating = dto.BookRating;
             book.BookLanguage = dto.BookLanguage;
             book.BookFormat = dto.BookFormat;
-            book.BookSold = dto.BookSold;
+            //book.BookSold = dto.BookSold;
             book.DiscountPercentage = dto.DiscountPercentage;
-            book.BookReviewCount = dto.BookReviewCount;
+            //book.BookReviewCount = dto.BookReviewCount;
             book.BookFinalPrice = dto.BookFinalPrice;
             book.IsOnSale = dto.IsOnSale;
             book.DiscountStartDate = dto.DiscountStartDate;
@@ -495,12 +507,12 @@ namespace BookNest.Controllers
 
             return Ok(formats);
         }
-        
+
         [HttpGet("available-languages")]
         public async Task<IActionResult> GetAvailableLanguages()
         {
             var languages = await _context.Books
-                .Where (b => !b.IsDeleted)
+                .Where(b => !b.IsDeleted)
                 .Where(b => !string.IsNullOrEmpty(b.BookLanguage))
                 .Select(b => b.BookLanguage!.Trim())
                 .Distinct()

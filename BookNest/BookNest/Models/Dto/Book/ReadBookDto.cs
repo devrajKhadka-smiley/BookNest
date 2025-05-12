@@ -23,7 +23,7 @@ namespace BookNest.Models.Dto.Book
         [Required]
         public string? PublicationName { get; set; }
         public List<string>? Genres { get; set; }
-
+        public bool IsDeleted { get; set; }
 
         //-------------by Dev--
         public float? BookStock { get; set; }

@@ -15,12 +15,12 @@ namespace BookNest.Models.Dto.Book
         public Guid BookPublicationId { get; set; }
         public int BookStock { get; set; }
         public decimal BookPrice { get; set; }
-        public float BookRating { get; set; }
+        //public float BookRating { get; set; }
         public string? BookLanguage { get; set; }
         public string? BookFormat { get; set; }
-        public int BookSold { get; set; }
+        //public int BookSold { get; set; }
         public float DiscountPercentage { get; set; }
-        public int BookReviewCount { get; set; }
+        //public int BookReviewCount { get; set; }
         public decimal BookFinalPrice { get; set; }
         public bool IsOnSale { get; set; }
         public DateTime? DiscountStartDate { get; set; }
