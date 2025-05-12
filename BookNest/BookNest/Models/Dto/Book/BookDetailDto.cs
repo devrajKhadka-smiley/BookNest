@@ -11,6 +11,11 @@ namespace BookNest.Models.Dto.Book
         public string? BookISBN { get; set; }
         [Required]
         public string? BookDescription { get; set; }
+        public int BookStock { get; set; }
+        public float BookRating { get; set; }
+        [Required]
+        public string? BookFormat { get; set; }
+        public int BookReviewCount { get; set; }
         [Required]
         public string? AuthorName { get; set; }
         [Required]

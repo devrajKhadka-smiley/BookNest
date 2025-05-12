@@ -43,7 +43,6 @@ namespace BookNest.Controllers
                 .Include(b => b.Author)
                 .Include(b => b.Publication)
                 .Include(b => b.Genres)
-                .Where(b => b.BookStock > 0)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -208,6 +207,10 @@ namespace BookNest.Controllers
                 BookTitle = book.BookTitle,
                 BookISBN = book.BookISBN,
                 BookDescription = book.BookDescription,
+                BookStock = book.BookStock,
+                BookRating = book.BookRating,
+                BookFormat = book.BookFormat,
+                BookReviewCount = book.BookReviewCount,
                 AuthorName = book.Author != null ? string.Join(", ", book.Author.Select(a => a.AuthorName)) : "Unknown",
                 PublicationName = book.Publication?.PublicationName ?? "Unknown",
                 Genres = book.Genres!.Select(g => g.GenreName!).ToList(),
