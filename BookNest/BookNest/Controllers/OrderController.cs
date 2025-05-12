@@ -230,8 +230,44 @@ namespace BookNest.Controllers
             }
         }
 
+        [HttpPost("ViewOrderByStaff")]
+        public async Task<IActionResult> ViewOrderByStaff([FromBody] StaffOrderDto request)
+        {
+            var order = await _context.Orders
+                .Include(o => o.User)
+                //.Include(o => o.Items)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(i => i.Book)
+                .FirstOrDefaultAsync(o => o.Id == request.OrderId);
 
+            if (order == null)
+                return NotFound("Order not found");
 
+            if (order.Status != "In Process")
+                return BadRequest("No active order found");
+
+            if (order.User.MemberShipId != request.MembershipId)
+                return BadRequest("Membership ID does not match the order's user.");
+
+            var orderDetails = order.OrderItems.Select(i => new
+            {
+                BookTitle = i.Book?.BookTitle ?? "Unknown",
+                Quantity = i.Quantity,
+                UnitPrice = i.PriceAtPurchase,
+                SubTotal = i.Quantity * i.PriceAtPurchase
+            });
+
+            return Ok(new
+            {
+                OrderId = order.Id,
+                OrderDate = order.CreatedAt,
+                Status = order.Status,
+                UserName = order.User.UserName,
+                Email = order.User.Email,
+                OrderDetails = orderDetails,
+                TotalAmount = order.TotalAmount
+            });
+        }
 
         //[HttpPost("UpdateOrderStaff")]
         //public async Task<IActionResult> UpdateOrderStaff([FromBody] StaffOrderDto request)
@@ -436,11 +472,12 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("OrderListStaff")]
-        public async Task<IActionResult> OrderListStaff(int pageNumber = 1, int pageSize = 10)
+        public async Task<IActionResult> OrderListStaff(int pageNumber = 1, int pageSize = 9)
         {
             try
             {
                 var orders = await _context.Orders
+                    .Where(o => o.Status == "In Process")
                     .Skip((pageNumber - 1) * pageSize)
                     .Take(pageSize)
                     .Select(o => new

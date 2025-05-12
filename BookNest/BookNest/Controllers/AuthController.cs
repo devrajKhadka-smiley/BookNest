@@ -73,6 +73,7 @@ namespace BookNest.Controllers
                 Lastname = registeruserDto.Lastname,
                 Email = registeruserDto.Email,
                 Address = registeruserDto.Address,
+                PhoneNumber = registeruserDto.PhoneNumber,
                 MemberShipId = Guid.NewGuid().ToString("N")
             };
 
