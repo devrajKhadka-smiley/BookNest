@@ -40,6 +40,7 @@ namespace BookNest.Controllers
                 return BadRequest("Page Number and page size must be greater than 0");
 
             var query = _context.Books
+                .Where(b => !b.IsDeleted)
                 .Include(b => b.Author)
                 .Include(b => b.Publication)
                 .Include(b => b.Genres)
@@ -124,6 +125,7 @@ namespace BookNest.Controllers
                 BookISBN = b.BookISBN,
                 BookPrice = b.BookPrice,
                 BookFinalPrice = b.BookFinalPrice,
+                BookDiscountedPrice = b.BookDiscountedPrice,
                 BookReviewCount = b.BookReviewCount,
                 BookRating = b.BookRating,
                 AuthorName = b.Author!.Select(a => a.AuthorName!).ToList(),
@@ -169,6 +171,7 @@ namespace BookNest.Controllers
                     BookISBN = b.BookISBN,
                     BookPrice = b.BookPrice,
                     BookFinalPrice = b.BookFinalPrice,
+                    BookDiscountedPrice = b.BookDiscountedPrice,
                     BookReviewCount = b.BookReviewCount,
                     BookRating = b.BookRating,
                     BookStock = b.BookStock,
@@ -192,6 +195,7 @@ namespace BookNest.Controllers
         public async Task<IActionResult> GetBookById(Guid id)
         {
             var book = await _context.Books
+                .Where(b => !b.IsDeleted)
                 .Include(b => b.Author)
                 .Include(b => b.Publication)
                 .Include(b => b.Genres)
@@ -473,7 +477,7 @@ namespace BookNest.Controllers
             if (book == null)
                 return NotFound("Book not found.");
 
-            _context.Books.Remove(book);
+            book.IsDeleted = true;
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -483,6 +487,7 @@ namespace BookNest.Controllers
         public async Task<IActionResult> GetAvailableFormats()
         {
             var formats = await _context.Books
+                .Where(b => !b.IsDeleted)
                 .Where(b => !string.IsNullOrEmpty(b.BookFormat))
                 .Select(b => b.BookFormat!.Trim())
                 .Distinct()
@@ -495,12 +500,27 @@ namespace BookNest.Controllers
         public async Task<IActionResult> GetAvailableLanguages()
         {
             var languages = await _context.Books
+                .Where (b => !b.IsDeleted)
                 .Where(b => !string.IsNullOrEmpty(b.BookLanguage))
                 .Select(b => b.BookLanguage!.Trim())
                 .Distinct()
                 .ToListAsync();
 
             return Ok(languages);
+        }
+
+        [HttpPut("restore/{id}")]
+        public async Task<IActionResult> RestoreBook(Guid id)
+        {
+            var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == id);
+
+            if (book == null)
+                return NotFound("Book not found.");
+
+            book.IsDeleted = false;
+            await _context.SaveChangesAsync();
+
+            return Ok("Book restored.");
         }
 
     }

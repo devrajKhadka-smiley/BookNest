@@ -13,6 +13,7 @@ namespace BookNest.Models.Dto.Book
         public decimal? BookPrice { get; set; }
         [Required]
         public decimal? BookFinalPrice { get; set; }
+        public decimal? BookDiscountedPrice { get; set; }
         [Required]
         public int? BookReviewCount { get; set; }
         [Required]

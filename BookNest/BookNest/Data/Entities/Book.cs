@@ -61,6 +61,7 @@ namespace BookNest.Data.Entities
 
         public ICollection<Author>? Author { get; set; }
 
+        public bool IsDeleted { get; set; } = false;
 
         [NotMapped]
         public decimal BookDiscountedPrice
@@ -68,7 +69,12 @@ namespace BookNest.Data.Entities
             get
             {
                 var now = DateTime.UtcNow;
-                if(DiscountStartDate.HasValue && DiscountEndDate.HasValue && now >= DiscountStartDate.Value && now <= DiscountEndDate.Value)
+
+                if (IsOnSale
+                    && DiscountStartDate.HasValue
+                    && DiscountEndDate.HasValue
+                    && now >= DiscountStartDate.Value
+                    && now <= DiscountEndDate.Value)
                 {
                     return BookPrice * (1 - (decimal)DiscountPercentage / 100);
                 }
