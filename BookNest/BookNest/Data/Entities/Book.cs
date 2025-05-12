@@ -61,5 +61,21 @@ namespace BookNest.Data.Entities
 
         public ICollection<Author>? Author { get; set; }
 
+
+        //It tell EF core to ignore and not to store property in db.
+        [NotMapped]
+        public decimal BookDiscountedPrice
+        {
+            get
+            {
+                var now = DateTime.UtcNow;
+                if(DiscountStartDate.HasValue && DiscountEndDate.HasValue && now >= DiscountStartDate.Value && now <= DiscountEndDate.Value)
+                {
+                    return BookPrice * (1 - (decimal)DiscountPercentage / 100);
+                }
+
+                return BookPrice;
+            }
+        }
     }
 }

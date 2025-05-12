@@ -22,5 +22,8 @@ namespace BookNest.Models.Dto.Book
         public bool IsOnSale { get; set; }
         public DateTime? DiscountStartDate { get; set; }
         public DateTime? DiscountEndDate { get; set; }
+
+        public decimal BookDiscountedPrice { get; set; }
+
     }
 }

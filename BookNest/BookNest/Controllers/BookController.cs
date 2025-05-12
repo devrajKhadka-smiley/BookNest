@@ -346,12 +346,12 @@ namespace BookNest.Controllers
                 BookAddedDate = DateTime.UtcNow
             };
 
-            // ✅ Assign authors (many-to-many)
+            
             book.Author = await _context.Authors
                 .Where(a => dto.AuthorIds.Contains(a.AuthorId))
                 .ToListAsync();
 
-            // ✅ Assign genres (many-to-many)
+            
             if (dto.GenreIds != null && dto.GenreIds.Any())
             {
                 book.Genres = await _context.Genres
@@ -359,7 +359,7 @@ namespace BookNest.Controllers
                     .ToListAsync();
             }
 
-            // ✅ Assign badges (many-to-many)
+           
             if (dto.BadgeIds != null && dto.BadgeIds.Any())
             {
                 book.Badges = await _context.Badges
@@ -370,7 +370,7 @@ namespace BookNest.Controllers
             _context.Books.Add(book);
             await _context.SaveChangesAsync();
 
-            // Fetch full book details after save
+            
             var createdBook = await _context.Books
                 .Include(b => b.Author)
                 .Include(b => b.Publication)
@@ -391,10 +391,12 @@ namespace BookNest.Controllers
                 Genres = createdBook.Genres?.Select(g => g.GenreName!).ToList() ?? new List<string>(),
                 Badges = createdBook.Badges?.Select(b => b.BadgeName!).ToList() ?? new List<string>(),
                 BookPrice = book.BookPrice,
-                BookFinalPrice = book.BookFinalPrice,
+                //BookFinalPrice = book.BookFinalPrice,
                 IsOnSale = book.IsOnSale,
                 DiscountStartDate = book.DiscountStartDate,
-                DiscountEndDate = book.DiscountEndDate
+                DiscountEndDate = book.DiscountEndDate,
+                BookDiscountedPrice = book.BookDiscountedPrice,
+
             };
 
             return CreatedAtAction(nameof(GetBookById), new { id = result.BookId }, result);
