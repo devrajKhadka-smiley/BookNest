@@ -24,7 +24,7 @@ namespace BookNest.Models.Dto.Book
         public string? PublicationName { get; set; }
         public List<string>? Genres { get; set; }
         public bool IsDeleted { get; set; }
-
+        public float DiscountPercentage { get; set; }
         //-------------by Dev--
         public float? BookStock { get; set; }
         public float? SoldPiece { get; set; }

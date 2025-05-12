@@ -97,7 +97,8 @@ namespace BookNest.Controllers
                 Firstname = user.Firstname,
                 Lastname = user.Lastname,
                 Address = user.Address,
-                MemberShipId = user.MemberShipId
+                MemberShipId = user.MemberShipId,
+                SuccessfulOrderCount = user.SuccessfulOrderCount,
             };
 
             return Ok(userDto);

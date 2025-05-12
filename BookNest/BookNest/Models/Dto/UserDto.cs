@@ -9,5 +9,6 @@
         public string? Lastname { get; set; }
         public string? Address { get; set; }
         public string? MemberShipId { get; set; }
+        public int SuccessfulOrderCount { get; set; }
     }
 }
