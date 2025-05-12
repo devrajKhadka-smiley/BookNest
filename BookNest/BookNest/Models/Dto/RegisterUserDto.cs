@@ -19,6 +19,7 @@ namespace BookNest.Models.Dto
 
         [Required]
         public string? Address { get; set; }
+        public string? PhoneNumber { get; set; }
 
         [Required]
         public string? Password { get; set; }

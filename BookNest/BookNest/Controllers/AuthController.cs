@@ -46,6 +46,7 @@ namespace BookNest.Controllers
                 Lastname = registeruserDto.Lastname,
                 Email = registeruserDto.Email,
                 Address = registeruserDto.Address,
+                PhoneNumber = registeruserDto.PhoneNumber,
                 MemberShipId = $"MEM{" "}{Random.Shared.Next(100, 1000)}-{Random.Shared.Next(100, 1000)}"
             };
 
@@ -62,7 +63,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost("staffregister")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> StaffRegister(RegisterUserDto registeruserDto)
         {
             User user = new User
