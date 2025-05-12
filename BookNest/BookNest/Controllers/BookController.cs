@@ -216,7 +216,8 @@ namespace BookNest.Controllers
                 BookFinalPrice = book.BookFinalPrice,
                 IsOnSale = book.IsOnSale,
                 DiscountStartDate = book.DiscountStartDate,
-                DiscountEndDate = book.DiscountEndDate
+                DiscountEndDate = book.DiscountEndDate,
+                BookDiscountedPrice = book.BookDiscountedPrice,
             };
 
             return Ok(result);
@@ -344,6 +345,7 @@ namespace BookNest.Controllers
                 DiscountStartDate = dto.DiscountStartDate,
                 DiscountEndDate = dto.DiscountEndDate,
                 BookAddedDate = DateTime.UtcNow
+
             };
 
             
