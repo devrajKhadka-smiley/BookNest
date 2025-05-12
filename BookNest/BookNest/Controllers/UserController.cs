@@ -62,7 +62,7 @@ namespace BookNest.Controllers
                 });
             }
 
-            
+
             var usersWithPagination = query
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
@@ -102,6 +102,25 @@ namespace BookNest.Controllers
 
             return Ok(userDto);
             //return Ok(user);
+        }
+
+        [HttpGet("staff")]
+        public IActionResult GetAllStaff()
+        {
+            var staffUsers = (from user in dbContext.Users
+                              join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
+                              join role in dbContext.Roles on userRole.RoleId equals role.Id
+                              where role.Name == "Staff"
+                              select new
+                              {
+                                  user.UserName,
+                                  user.Firstname,
+                                  user.Lastname,
+                                  user.PhoneNumber,
+                                  user.Email
+                              }).ToList();
+
+            return Ok(staffUsers);
         }
 
     }

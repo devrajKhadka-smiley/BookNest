@@ -43,7 +43,6 @@ namespace BookNest.Controllers
                 .Include(b => b.Author)
                 .Include(b => b.Publication)
                 .Include(b => b.Genres)
-                .Where(b => b.BookStock > 0)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
