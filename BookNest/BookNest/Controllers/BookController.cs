@@ -541,5 +541,48 @@ namespace BookNest.Controllers
             return Ok("Book restored.");
         }
 
+        [HttpGet("featured")]
+        public async Task<IActionResult> GetFeaturedBooks()
+        {
+            var query = _context.Books
+                .Where(b => b.IsFeatured && !b.IsDeleted && b.BookStock > 0)
+                .Include(b => b.Author)
+                .Include(b => b.Publication)
+                .Include(b => b.Genres)
+                .Include(b => b.Badges)
+                .AsQueryable();
+
+            var totalRecords = await query.CountAsync();
+
+            // Get 4 random featured books
+            var randomFour = await query
+                .OrderBy(b => Guid.NewGuid()) // EF-safe randomness
+                .Take(4)
+                .ToListAsync();
+
+            var result = randomFour.Select(b => new FeaturedBookDto
+            {
+                BookId = b.BookId,
+                BookTitle = b.BookTitle,
+                BookISBN = b.BookISBN,
+                BookPrice = b.BookPrice,
+                BookFinalPrice = b.BookFinalPrice,
+                BookDiscountedPrice = b.BookDiscountedPrice,
+                BookReviewCount = b.BookReviewCount,
+                BookRating = b.BookRating,
+                AuthorName = b.Author!.Select(a => a.AuthorName!).ToList(),
+                PublicationName = b.Publication != null ? b.Publication.PublicationName! : "Unknown",
+                Genres = b.Genres!.Select(g => g.GenreName!).ToList(),
+                IsDeleted = b.IsDeleted,
+                OnSale = b.IsOnSale,
+                BookStock = b.BookStock,
+                SoldPiece = b.BookSold,
+                DiscountPercentage = b.DiscountPercentage,
+                IsFeatured = b.IsFeatured
+            }).ToList();
+
+            return Ok(result);
+        }
+
     }
 }

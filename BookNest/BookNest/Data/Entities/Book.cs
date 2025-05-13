@@ -62,6 +62,7 @@ namespace BookNest.Data.Entities
         public ICollection<Author>? Author { get; set; }
 
         public bool IsDeleted { get; set; } = false;
+        public bool IsFeatured { get; set; } = false;
 
         [NotMapped]
         public decimal BookDiscountedPrice
