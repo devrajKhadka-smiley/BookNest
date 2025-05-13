@@ -63,6 +63,8 @@ namespace BookNest.Data.Entities
 
         public bool IsDeleted { get; set; } = false;
 
+        public byte[]? ImageData { get; set; }
+
         [NotMapped]
         public decimal BookDiscountedPrice
         {

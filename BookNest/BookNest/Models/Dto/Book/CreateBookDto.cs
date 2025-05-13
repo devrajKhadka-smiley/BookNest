@@ -28,5 +28,6 @@ namespace BookNest.Models.Dto.Book
         public List<Guid>? GenreIds { get; set; }
         public List<Guid>? BadgeIds { get; set; }
         public List<Guid> AuthorIds { get; set; }
+        public IFormFile? ImageFile { get; set; }
     }
 }
