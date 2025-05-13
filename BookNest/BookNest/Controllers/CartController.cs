@@ -99,6 +99,8 @@ namespace BookNest.Controllers
                     BookStock = ci.Book?.BookStock,
                     BookPublisher = ci.Book?.Publication?.PublicationName ?? "Unknown",
                     AuthorName = ci.Book?.Author?.FirstOrDefault()?.AuthorName ?? "Unknown",
+                    ImageBase64 = ci.Book.ImageData != null ? Convert.ToBase64String(ci.Book.ImageData) : null
+
                 }).ToList()
             };
 

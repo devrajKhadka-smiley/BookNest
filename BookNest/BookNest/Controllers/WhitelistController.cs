@@ -38,7 +38,8 @@ namespace BookNest.Controllers
                     BookRating = w.Book.BookRating,
                     BookStock = w.Book.BookStock,
                     OnSale = w.Book.IsOnSale,
-                    DiscountPercentage = w.Book.DiscountPercentage
+                    DiscountPercentage = w.Book.DiscountPercentage,
+                    ImageBase64 = w.Book.ImageData != null ? Convert.ToBase64String(w.Book.ImageData) : null
                 })
                 .ToListAsync();
 

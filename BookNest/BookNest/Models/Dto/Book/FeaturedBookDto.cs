@@ -31,5 +31,6 @@ namespace BookNest.Models.Dto.Book
         public bool? OnSale { get; set; }
         public bool IsFeatured { get; set; }
 
+        public string? ImageBase64 { get; set; }
     }
 }

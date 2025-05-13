@@ -612,7 +612,9 @@ namespace BookNest.Controllers
                 BookStock = b.BookStock,
                 SoldPiece = b.BookSold,
                 DiscountPercentage = b.DiscountPercentage,
-                IsFeatured = b.IsFeatured
+                IsFeatured = b.IsFeatured,
+                ImageBase64 = b.ImageData != null ? Convert.ToBase64String(b.ImageData) : null
+
             }).ToList();
 
             return Ok(result);

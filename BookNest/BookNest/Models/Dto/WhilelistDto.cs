@@ -15,5 +15,7 @@
         public int BookStock { get; set; }
         public bool OnSale { get; set; }
         public float DiscountPercentage { get; set; }
+        public string? ImageBase64 { get; set; }
+
     }
 }
