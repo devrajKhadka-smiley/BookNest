@@ -231,23 +231,19 @@ namespace BookNest.Controllers
         }
 
         [HttpPost("ViewOrderByStaff")]
-        public async Task<IActionResult> ViewOrderByStaff([FromBody] StaffOrderDto request)
+        public async Task<IActionResult> ViewOrderByStaff([FromBody] string claimCode)
         {
             var order = await _context.Orders
                 .Include(o => o.User)
-                //.Include(o => o.Items)
                 .Include(o => o.OrderItems)
                     .ThenInclude(i => i.Book)
-                .FirstOrDefaultAsync(o => o.Id == request.OrderId);
+                .FirstOrDefaultAsync(o => o.ClaimCode == claimCode);
 
             if (order == null)
                 return NotFound("Order not found");
 
             if (order.Status != "In Process")
                 return BadRequest("No active order found");
-
-            if (order.User.MemberShipId != request.MembershipId)
-                return BadRequest("Membership ID does not match the order's user.");
 
             var orderDetails = order.OrderItems.Select(i => new
             {
@@ -268,69 +264,6 @@ namespace BookNest.Controllers
                 TotalAmount = order.TotalAmount
             });
         }
-
-        //[HttpPost("UpdateOrderStaff")]
-        //public async Task<IActionResult> UpdateOrderStaff([FromBody] StaffOrderDto request)
-        //{
-        //    var order = await _context.Orders
-        //        .Include(o => o.User)
-        //        .Include(o => o.OrderItems)
-        //        .ThenInclude(od => od.Book)
-        //        .FirstOrDefaultAsync(o => o.Id == request.OrderId);
-
-        //    if (order == null)
-        //        return NotFound("Order not found");
-
-        //    if (order.Status != "In Process")
-        //        return BadRequest("No active order found");
-
-        //    if (order.User.MemberShipId != request.MembershipId)
-        //        return BadRequest("Invalid OTP / Claim Code.");
-
-        //    order.Status = "Collected";
-        //    order.OrderReceived = true;
-
-        //    // SignalR integration for live broadcast
-        //    foreach (var item in order.OrderItems)
-        //    {
-        //        var book = await _context.Books.FindAsync(item.BookId);
-        //        if (book == null) continue;
-
-        //        var message = $"Just Ordered: \"{book.BookTitle}\"!";
-
-        //        await _hubContext.Clients.All.SendAsync("ReceiveOrderBroadcast", message);
-        //    }
-
-        //    order.ClaimCode = null;
-
-
-        //    foreach (var orderDetail in order.OrderItems)
-        //    {
-        //        var book = orderDetail.Book;
-
-        //        book.BookStock -= orderDetail.Quantity;
-
-        //        if (book.BookStock < 0)
-        //        {
-        //            return BadRequest($"Insufficient stock for the book: {book.BookTitle}");
-        //        }
-
-
-        //    }
-
-        //    await _context.SaveChangesAsync();
-
-        //    return Ok(new
-        //    {
-        //        Message = "Order verified and marked as Delivered",
-        //        OrderId = order.Id,
-        //        User = order.User.UserName,
-        //        Status = order.Status,
-        //        UserSuccessfulOrderCount = order.User?.SuccessfulOrderCount,
-        //        OrderStatus = order.Status
-        //    });
-
-        //}
 
         [HttpPost("UpdateOrderStaff")]
         public async Task<IActionResult> UpdateOrderStaff([FromBody] StaffOrderDto request)
@@ -398,8 +331,6 @@ namespace BookNest.Controllers
                 OrderStatus = order.Status
             });
         }
-
-
 
         [HttpPost("CancelOrderStaff")]
         public async Task<IActionResult> CancelOrderStaff([FromBody] StaffOrderDto request)
@@ -472,12 +403,16 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("OrderListStaff")]
-        public async Task<IActionResult> OrderListStaff(int pageNumber = 1, int pageSize = 9)
+        public async Task<IActionResult> OrderListStaff(int pageNumber = 1, int pageSize = 10)
         {
             try
             {
-                var orders = await _context.Orders
-                    .Where(o => o.Status == "In Process")
+                var query = _context.Orders
+                    .Where(o => o.Status == "In Process");
+
+                var totalOrders = await query.CountAsync();
+
+                var orders = await query
                     .Skip((pageNumber - 1) * pageSize)
                     .Take(pageSize)
                     .Select(o => new
@@ -498,18 +433,10 @@ namespace BookNest.Controllers
                     })
                     .ToListAsync();
 
-                if (orders == null || orders.Count == 0)
-                {
-                    return NotFound("No orders found.");
-                }
-
-                var totalOrders = await _context.Orders.CountAsync();
-
                 var result = new
                 {
                     Orders = orders,
                     TotalOrders = totalOrders,
-
                     TotalPages = (int)Math.Ceiling((double)totalOrders / pageSize),
                     CurrentPage = pageNumber,
                     PageSize = pageSize
@@ -519,9 +446,10 @@ namespace BookNest.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
             }
         }
+
 
         [HttpGet("send")]
         public async Task<IActionResult> SendTestMessage()
