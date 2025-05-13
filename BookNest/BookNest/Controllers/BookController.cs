@@ -131,7 +131,10 @@ namespace BookNest.Controllers
                 AuthorName = b.Author!.Select(a => a.AuthorName!).ToList(),
                 PublicationName = b.Publication != null ? b.Publication.PublicationName! : "Unknown",
                 Genres = b.Genres!.Select(g => g.GenreName!).ToList(),
-                IsDeleted = b.IsDeleted
+                IsDeleted = b.IsDeleted,
+                OnSale = b.IsOnSale,
+                BookStock = b.BookStock,
+                DiscountPercentage = b.DiscountPercentage,
             }).ToList();
 
             var response = new
@@ -178,6 +181,7 @@ namespace BookNest.Controllers
                     BookStock = b.BookStock,
                     SoldPiece = b.BookSold,
                     OnSale = b.IsOnSale,
+                    DiscountPercentage = b.DiscountPercentage,
                     AuthorName = b.Author!.Select(a => a.AuthorName!).ToList(),
                     PublicationName = b.Publication != null ? b.Publication.PublicationName : "Unknown",
                     Genres = b.Genres != null ? b.Genres.Select(g => g.GenreName).ToList() : new List<string>(),
@@ -229,7 +233,8 @@ namespace BookNest.Controllers
                 DiscountStartDate = book.DiscountStartDate,
                 DiscountEndDate = book.DiscountEndDate,
                 BookDiscountedPrice = book.BookDiscountedPrice,
-                IsDeleted = book.IsDeleted
+                IsDeleted = book.IsDeleted,
+                DiscountPercentage = book.DiscountPercentage
             };
 
             return Ok(result);
@@ -416,7 +421,8 @@ namespace BookNest.Controllers
                 DiscountStartDate = book.DiscountStartDate,
                 DiscountEndDate = book.DiscountEndDate,
                 BookDiscountedPrice = book.BookDiscountedPrice,
-                IsDeleted = book.IsDeleted
+                IsDeleted = book.IsDeleted,
+                DiscountPercentage = book.DiscountPercentage
             };
 
 

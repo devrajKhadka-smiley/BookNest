@@ -95,7 +95,8 @@ namespace BookNest.Controllers
                     ci.Quantity,
                     BookTitle = ci.Book?.BookTitle,
                     BookDescription = ci.Book?.BookDescription,
-                    BookPrice = ci.Book?.BookPrice,
+                    BookPrice = ci.Book?.BookDiscountedPrice,
+                    BookStock = ci.Book?.BookStock,
                     BookPublisher = ci.Book?.Publication?.PublicationName ?? "Unknown",
                     AuthorName = ci.Book?.Author?.FirstOrDefault()?.AuthorName ?? "Unknown",
                 }).ToList()
@@ -128,6 +129,29 @@ namespace BookNest.Controllers
             await _context.SaveChangesAsync();
 
             return Ok("Item successfully removed from the cart.");
+        }
+
+        [HttpPut("update-quantity/{userId}")]
+        public async Task<IActionResult> UpdateCartItemQuantity(long userId, [FromBody] CartQuantityUpdateDto dto)
+        {
+            if (dto == null || dto.BookId == Guid.Empty || dto.Quantity <= 0)
+                return BadRequest("Invalid request data");
+
+            var cart = await _context.Carts
+                .Include(c => c.Items)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null)
+                return NotFound("Cart not found");
+
+            var item = cart.Items.FirstOrDefault(i => i.BookId == dto.BookId);
+            if (item == null)
+                return NotFound("Cart item not found");
+
+            item.Quantity = dto.Quantity;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Quantity updated successfully" });
         }
 
     }

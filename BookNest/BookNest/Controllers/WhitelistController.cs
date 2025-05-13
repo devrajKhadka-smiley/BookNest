@@ -21,19 +21,30 @@ namespace BookNest.Controllers
         [HttpGet("user/{userId}")]
         public async Task<ActionResult<IEnumerable<WhitelistDto>>> GetUserWhitelist(int userId)
         {
-            var whitelist = await _context.Whitelists
+            var wishlist = await _context.Whitelists
                 .Where(w => w.UserId == userId)
+                .Include(w => w.Book) // Include related book
                 .Select(w => new WhitelistDto
                 {
                     Id = w.Id,
                     UserId = w.UserId,
                     BookId = w.BookId,
-                    //AddedDate = w.AddedDate
+
+                    // Book info
+                    BookTitle = w.Book.BookTitle,
+                    BookPrice = w.Book.BookPrice,
+                    BookDiscountedPrice = w.Book.BookDiscountedPrice,
+                    BookReviewCount = w.Book.BookReviewCount,
+                    BookRating = w.Book.BookRating,
+                    BookStock = w.Book.BookStock,
+                    OnSale = w.Book.IsOnSale,
+                    DiscountPercentage = w.Book.DiscountPercentage
                 })
                 .ToListAsync();
 
-            return Ok(whitelist);
+            return Ok(wishlist);
         }
+
 
         // POST: api/Whitelist
         [HttpPost]
@@ -63,18 +74,20 @@ namespace BookNest.Controllers
             return CreatedAtAction(nameof(GetUserWhitelist), new { userId = dto.UserId }, dto);
         }
 
-        // DELETE: api/Whitelist/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> RemoveFromWhitelist(int id)
+        [HttpDelete("{userId}/{bookId}")]
+        public async Task<IActionResult> RemoveFromWishlist(int userId, Guid bookId)
         {
-            var entry = await _context.Whitelists.FindAsync(id);
+            var entry = await _context.Whitelists
+                .FirstOrDefaultAsync(w => w.UserId == userId && w.BookId == bookId);
+
             if (entry == null)
-                return NotFound();
+                return NotFound(new { message = "Item not found in wishlist." });
 
             _context.Whitelists.Remove(entry);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
     }
 }

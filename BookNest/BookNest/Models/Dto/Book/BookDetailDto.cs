@@ -30,6 +30,7 @@ namespace BookNest.Models.Dto.Book
         public List<Guid>? BadgeIds { get; set; }
         public decimal BookPrice { get; set; }
         public decimal BookFinalPrice { get; set; }
+        public float DiscountPercentage { get; set; }
         public bool IsOnSale { get; set; }
         public DateTime? DiscountStartDate { get; set; }
         public DateTime? DiscountEndDate { get; set; }
