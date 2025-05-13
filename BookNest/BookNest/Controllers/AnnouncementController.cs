@@ -1,6 +1,7 @@
 ﻿using BookNest.Data;
 using BookNest.Data.Entities;
 using BookNest.Models.Dto.Announcement;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateAnnouncement([FromBody] CreateAnnouncementDto dto)
         {
             if (dto.EndDate <= dto.StartDate)
@@ -43,6 +45,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("active-announcement")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<List<ReadAnnouncementDto>>> GetActiveAnnouncements()
         {
             var currentTime = DateTime.UtcNow;
@@ -64,6 +67,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateAnnouncement(Guid id, [FromBody] UpdateAnnouncementDto dto)
         {
             if (dto.EndDate <= dto.StartDate)
@@ -87,6 +91,7 @@ namespace BookNest.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteAnnouncement(Guid id)
         {
             var announcement = await _context.Announcements.FindAsync(id);
@@ -100,6 +105,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<List<ReadAnnouncementDto>>> GetAllAnnouncements()
         {
             var announcements = await _context.Announcements

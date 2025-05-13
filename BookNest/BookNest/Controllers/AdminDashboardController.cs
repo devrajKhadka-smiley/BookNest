@@ -1,5 +1,6 @@
 ﻿using BookNest.Data;
 using BookNest.Models.Dto.Dashboard;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +17,9 @@ namespace BookNest.Controllers
             _context = context;
         }
 
+
         [HttpGet("stats-cards")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAdminStatsCards()
         {
             var now = DateTime.UtcNow;
@@ -47,12 +50,13 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("highest-selling-books")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetHighestSellingBooks()
         {
             var books = await _context.Books
                 .Where(b => !b.IsDeleted)
                 .OrderByDescending(b => b.BookSold)
-                .Take(5) 
+                .Take(5)
                 .Select(b => new HighestSellingDto
                 {
                     Title = b.BookTitle,

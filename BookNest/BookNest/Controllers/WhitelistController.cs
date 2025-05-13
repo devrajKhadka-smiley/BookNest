@@ -3,6 +3,7 @@ using BookNest.Data;
 using BookNest.Data.Entities;
 using BookNest.Models.Dto;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookNest.Controllers
 {
@@ -19,6 +20,7 @@ namespace BookNest.Controllers
 
         // GET: api/Whitelist/user/5
         [HttpGet("user/{userId}")]
+        [Authorize(Roles = "Member")]
         public async Task<ActionResult<IEnumerable<WhitelistDto>>> GetUserWhitelist(int userId)
         {
             var wishlist = await _context.Whitelists
@@ -49,6 +51,7 @@ namespace BookNest.Controllers
 
         // POST: api/Whitelist
         [HttpPost]
+        [Authorize(Roles = "Member")]
         public async Task<ActionResult<WhitelistDto>> AddToWhitelist(WhitelistDto dto)
         {
             bool alreadyExists = await _context.Whitelists

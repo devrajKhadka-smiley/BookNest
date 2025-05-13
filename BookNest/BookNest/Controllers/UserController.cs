@@ -18,7 +18,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult GetAllUser([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? searchTerm = null)
         {
             var query = from user in dbContext.Users
@@ -106,6 +106,8 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("staff")]
+        [Authorize(Roles = "Admin")]
+
         public IActionResult GetAllStaff([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 5)
         {
             var staffQuery = from user in dbContext.Users

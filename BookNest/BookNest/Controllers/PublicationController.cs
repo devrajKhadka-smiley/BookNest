@@ -1,6 +1,7 @@
 using BookNest.Data;
 using BookNest.Data.Entities;
 using BookNest.Models.Dto.Publication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -41,6 +42,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreatePublication(CreatePublicationDto dto)
         {
             Publication publication = new Publication
@@ -55,6 +57,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdatePublication(Guid id, UpdatePublicationDto dto)
         {
             Publication? existingPublication = await _context.Publications.FindAsync(id);

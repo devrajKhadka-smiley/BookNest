@@ -23,6 +23,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> UserRegister(RegisterUserDto registeruserDto)
         {
 
@@ -63,7 +64,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost("staffregister")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> StaffRegister(RegisterUserDto registeruserDto)
         {
             User user = new User
@@ -89,6 +90,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost("user/login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var user = await userManager.FindByEmailAsync(loginDto.Email!);
@@ -119,7 +121,9 @@ namespace BookNest.Controllers
             return Unauthorized(new { message = "Some credentials didn't match 😒." });
         }
 
+
         [HttpPost("admin/login")]
+        [AllowAnonymous]
         public async Task<IActionResult> AdminLogin([FromBody] LoginDto loginDto)
         {
             var user = await userManager.FindByEmailAsync(loginDto.Email!);

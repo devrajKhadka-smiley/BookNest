@@ -1,6 +1,7 @@
 ﻿using BookNest.Data;
 using BookNest.Data.Entities;
 using BookNest.Models.Dto.Genre;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,6 +41,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateGenre(CreateGenreDto dto)
         {
             Genre genre = new Genre
@@ -54,6 +56,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateGenre(Guid id, UpdateGenreDto dto)
         {
             Genre? existingGenre = await _context.Genres.FindAsync(id);

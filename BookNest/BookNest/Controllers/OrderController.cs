@@ -10,6 +10,7 @@ using MimeKit.Text;
 using MailKit.Security;
 using Microsoft.AspNetCore.SignalR;
 using BookNest.Hubs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookNest.Controllers
 {
@@ -35,6 +36,7 @@ namespace BookNest.Controllers
 
 
         [HttpPost("place-order/{userId}")]
+        [Authorize(Roles = "Member")]
         public async Task<IActionResult> PlaceOrder(long userId)
         {
             var user = await _context.Users.FindAsync(userId);
@@ -231,6 +233,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost("ViewOrderByStaff")]
+        [Authorize(Roles = "Staff")]
         public async Task<IActionResult> ViewOrderByStaff([FromBody] ClaimCodeDto input)
         {
             var claimCode = input.ClaimCode;
@@ -272,6 +275,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost("UpdateOrderStaff")]
+        [Authorize(Roles = "Staff")]
         public async Task<IActionResult> UpdateOrderStaff([FromBody] string claimCode)
         {
             if (string.IsNullOrWhiteSpace(claimCode))
@@ -337,6 +341,7 @@ namespace BookNest.Controllers
 
 
         [HttpPost("CancelOrderStaff")]
+        [Authorize(Roles = "Staff")]
         public async Task<IActionResult> CancelOrderStaff([FromBody] string claimCode)
         {
             if (string.IsNullOrWhiteSpace(claimCode))
@@ -377,6 +382,7 @@ namespace BookNest.Controllers
 
 
         [HttpPost("CancelOrderUser")]
+        [Authorize(Roles = "Staff")]
         public async Task<IActionResult> CancelOrderUser([FromBody] StaffOrderDto request)
         {
             var order = await _context.Orders
@@ -411,6 +417,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("OrderListStaff")]
+        [Authorize(Roles = "Staff")]
         public async Task<IActionResult> OrderListStaff(int pageNumber = 1, int pageSize = 10)
         {
             try

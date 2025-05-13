@@ -1,6 +1,7 @@
 ﻿using BookNest.Data;
 using BookNest.Data.Entities;
 using BookNest.Models.Dto.Badge;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,6 +41,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateBadge(CreateBadgeDto dto)
         {
             Badge badge = new Badge
@@ -54,6 +56,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateBadge(Guid id, UpdateBadgeDto dto)
         {
             Badge? existingBadge = await _context.Badges.FindAsync(id);

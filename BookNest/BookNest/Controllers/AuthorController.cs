@@ -1,6 +1,7 @@
 ﻿using BookNest.Data;
 using BookNest.Data.Entities;
 using BookNest.Models.Dto.Author;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet]
+        [Authorize (Roles= "Admin")]
         public async Task<IActionResult> GetAllAuthors()
         {
             List<Author> authorList = await _context.Authors.ToListAsync();
@@ -30,6 +32,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAuthorById(Guid id)
         {
             Author? author = await _context.Authors.FindAsync(id);
@@ -41,6 +44,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateAuthor(CreateAuthorDto dto)
         {
             Author author = new Author
@@ -55,6 +59,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateAuthor(Guid id, UpdateAuthorDto dto)
         {
             Author? existingAuthor = await _context.Authors.FindAsync(id);

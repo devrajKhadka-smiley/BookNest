@@ -162,7 +162,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("adminGetAllBooks")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllAdmin()
         {
             var allBooks = await _context.Books
@@ -326,6 +326,7 @@ namespace BookNest.Controllers
 
         [HttpPost]
         [Consumes("multipart/form-data")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateBook(CreateBookDto dto)
         {
             if (dto.AuthorIds == null || !dto.AuthorIds.Any())
@@ -452,6 +453,7 @@ namespace BookNest.Controllers
 
         [HttpPut("{id}")]
         [Consumes("multipart/form-data")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateBook(Guid id, [FromForm] UpdateBookDto dto)
         {
             if (id != dto.BookId)
@@ -519,6 +521,7 @@ namespace BookNest.Controllers
 
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteBook(Guid id)
         {
             Book? book = await _context.Books
