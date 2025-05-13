@@ -65,24 +65,70 @@ namespace BookNest.Controllers
             return Ok("Item successfully added to the cart.");
         }
 
+        //[HttpGet("{userId}")]
+        //public async Task<IActionResult> GetCart(long userId)
+        //{
+        //    var cart = await _context.Carts
+        //        .Include(c => c.Items)
+        //        .ThenInclude(ci => ci.Book)
+        //        .ThenInclude(b => b.Author)
+        //        .Include(ci => ci.Items)
+        //        .ThenInclude(ci => ci.Book)
+        //        .ThenInclude(b => b.Publication)
+        //        .Include(ci => ci.Items)
+        //        .ThenInclude(ci => ci.Book)
+        //        .ThenInclude(b => b.Genres)
+        //        .FirstOrDefaultAsync(c => c.UserId == userId);
+
+        //    if (cart == null)
+        //    {
+        //        return NotFound("Cart not found for this user.");
+        //    }
+
+        //    var cartDto = new
+        //    {
+        //        cart.Id,
+        //        cart.CreatedAt,
+        //        Items = cart.Items.Select(ci => new
+        //        {
+        //            ci.BookId,
+        //            ci.Quantity,
+        //            BookTitle = ci.Book?.BookTitle,
+        //            BookDescription = ci.Book?.BookDescription,
+        //            BookPrice = ci.Book?.BookDiscountedPrice,
+        //            BookStock = ci.Book?.BookStock,
+        //            BookPublisher = ci.Book?.Publication?.PublicationName ?? "Unknown",
+        //            AuthorName = ci.Book?.Author?.FirstOrDefault()?.AuthorName ?? "Unknown",
+        //        }).ToList()
+        //    };
+
+        //    return Ok(cartDto);
+        //}
+
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetCart(long userId)
         {
             var cart = await _context.Carts
                 .Include(c => c.Items)
-                .ThenInclude(ci => ci.Book)
-                .ThenInclude(b => b.Author)
-                .Include(ci => ci.Items)
-                .ThenInclude(ci => ci.Book)
-                .ThenInclude(b => b.Publication)
-                .Include(ci => ci.Items)
-                .ThenInclude(ci => ci.Book)
-                .ThenInclude(b => b.Genres)
+                    .ThenInclude(ci => ci.Book)
+                        .ThenInclude(b => b.Author)
+                .Include(c => c.Items)
+                    .ThenInclude(ci => ci.Book)
+                        .ThenInclude(b => b.Publication)
+                .Include(c => c.Items)
+                    .ThenInclude(ci => ci.Book)
+                        .ThenInclude(b => b.Genres)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (cart == null)
             {
-                return NotFound("Cart not found for this user.");
+                // Return empty cart structure instead of 404
+                return Ok(new
+                {
+                    Id = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    Items = new List<object>()
+                });
             }
 
             var cartDto = new
@@ -104,6 +150,7 @@ namespace BookNest.Controllers
 
             return Ok(cartDto);
         }
+
 
         [HttpDelete("remove-from-cart/{userId}/{bookId}")]
         public async Task<IActionResult> RemoveFromCart(long userId, Guid bookId)
