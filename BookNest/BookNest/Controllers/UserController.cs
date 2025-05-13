@@ -105,23 +105,36 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("staff")]
-        public IActionResult GetAllStaff()
+        public IActionResult GetAllStaff([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 5)
         {
-            var staffUsers = (from user in dbContext.Users
-                              join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
-                              join role in dbContext.Roles on userRole.RoleId equals role.Id
-                              where role.Name == "Staff"
-                              select new
-                              {
-                                  user.UserName,
-                                  user.Firstname,
-                                  user.Lastname,
-                                  user.PhoneNumber,
-                                  user.Email
-                              }).ToList();
+            var staffQuery = from user in dbContext.Users
+                             join userRole in dbContext.UserRoles on user.Id equals userRole.UserId
+                             join role in dbContext.Roles on userRole.RoleId equals role.Id
+                             where role.Name == "Staff"
+                             orderby user.UserName
+                             select new
+                             {
+                                 user.UserName,
+                                 user.Firstname,
+                                 user.Lastname,
+                                 user.PhoneNumber,
+                                 user.Email
+                             };
 
-            return Ok(staffUsers);
+            var totalRecords = staffQuery.Count();
+            var paginatedStaff = staffQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return Ok(new
+            {
+                data = paginatedStaff,
+                totalRecords
+            });
         }
+
+
 
     }
 }
