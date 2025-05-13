@@ -29,5 +29,8 @@ namespace BookNest.Models.Dto.Book
         public float? BookStock { get; set; }
         public float? SoldPiece { get; set; }
         public bool? OnSale { get; set; }
+
+        public string? ImageBase64 { get; set; }
+
     }
 }

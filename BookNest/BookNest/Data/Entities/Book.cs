@@ -83,5 +83,6 @@ namespace BookNest.Data.Entities
                 return BookPrice;
             }
         }
+        public byte[]? ImageData { get; set; }
     }
 }

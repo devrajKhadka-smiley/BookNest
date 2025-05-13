@@ -30,5 +30,6 @@ namespace BookNest.Models.Dto.Book
         public float? SoldPiece { get; set; }
         public bool? OnSale { get; set; }
         public bool IsFeatured { get; set; }
+
     }
 }

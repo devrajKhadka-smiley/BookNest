@@ -37,5 +37,7 @@ namespace BookNest.Models.Dto.Book
 
         public decimal BookDiscountedPrice { get; set; }
 
+        public string? ImageBase64 { get; set; }
+
     }
 }

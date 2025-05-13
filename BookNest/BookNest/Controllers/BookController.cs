@@ -135,6 +135,7 @@ namespace BookNest.Controllers
                 OnSale = b.IsOnSale,
                 BookStock = b.BookStock,
                 DiscountPercentage = b.DiscountPercentage,
+                ImageBase64 = b.ImageData != null ? Convert.ToBase64String(b.ImageData) : null
             }).ToList();
 
             var response = new
@@ -234,7 +235,8 @@ namespace BookNest.Controllers
                 DiscountEndDate = book.DiscountEndDate,
                 BookDiscountedPrice = book.BookDiscountedPrice,
                 IsDeleted = book.IsDeleted,
-                DiscountPercentage = book.DiscountPercentage
+                DiscountPercentage = book.DiscountPercentage,
+                ImageBase64 = book.ImageData != null ? Convert.ToBase64String(book.ImageData) : null
             };
 
             return Ok(result);
@@ -323,6 +325,7 @@ namespace BookNest.Controllers
         //}
 
         [HttpPost]
+        [Consumes("multipart/form-data")]
         public async Task<IActionResult> CreateBook(CreateBookDto dto)
         {
             if (dto.AuthorIds == null || !dto.AuthorIds.Any())
@@ -361,7 +364,10 @@ namespace BookNest.Controllers
                 IsOnSale = dto.IsOnSale,
                 DiscountStartDate = dto.DiscountStartDate,
                 DiscountEndDate = dto.DiscountEndDate,
-                BookAddedDate = DateTime.UtcNow
+                BookAddedDate = DateTime.UtcNow,
+
+
+
 
             };
 
@@ -384,6 +390,15 @@ namespace BookNest.Controllers
                 book.Badges = await _context.Badges
                     .Where(b => dto.BadgeIds.Contains(b.BadgeId))
                     .ToListAsync();
+            }
+
+            if (dto.ImageFile != null && dto.ImageFile.Length > 0)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await dto.ImageFile.CopyToAsync(memoryStream);
+                    book.ImageData = memoryStream.ToArray();
+                }
             }
 
             _context.Books.Add(book);
@@ -422,7 +437,13 @@ namespace BookNest.Controllers
                 DiscountEndDate = book.DiscountEndDate,
                 BookDiscountedPrice = book.BookDiscountedPrice,
                 IsDeleted = book.IsDeleted,
-                DiscountPercentage = book.DiscountPercentage
+                DiscountPercentage = book.DiscountPercentage,
+
+                ImageBase64 = book.ImageData != null
+    ? Convert.ToBase64String(book.ImageData)
+    : null
+
+
             };
 
 
@@ -430,15 +451,16 @@ namespace BookNest.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateBook(Guid id, [FromBody] UpdateBookDto dto)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UpdateBook(Guid id, [FromForm] UpdateBookDto dto)
         {
-
             if (id != dto.BookId)
                 return BadRequest("Book ID mismatch.");
 
-            Book? book = await _context.Books
+            var book = await _context.Books
                 .Include(b => b.Genres)
                 .Include(b => b.Badges)
+                .Include(b => b.Author)
                 .FirstOrDefaultAsync(b => b.BookId == id);
 
             if (book == null)
@@ -447,30 +469,37 @@ namespace BookNest.Controllers
             bool allAuthorsExist = await _context.Authors
                 .Where(a => dto.AuthorIds.Contains(a.AuthorId))
                 .CountAsync() == dto.AuthorIds.Count;
-            bool publicationExists = await _context.Publications.AnyAsync(p => p.PublicationId == dto.BookPublicationId);
+
+            bool publicationExists = await _context.Publications
+                .AnyAsync(p => p.PublicationId == dto.BookPublicationId);
 
             if (!allAuthorsExist || !publicationExists)
                 return BadRequest("Invalid Author or Publication.");
 
+            // 🔄 Update fields
             book.BookTitle = dto.BookTitle;
             book.BookISBN = dto.BookISBN;
             book.BookDescription = dto.BookDescription;
-            //book.BookAuthorId = dto.BookAuthorId;
             book.BookPublicationId = dto.BookPublicationId;
             book.BookStock = dto.BookStock;
             book.BookPrice = dto.BookPrice;
-            //book.BookRating = dto.BookRating;
             book.BookLanguage = dto.BookLanguage;
             book.BookFormat = dto.BookFormat;
-            //book.BookSold = dto.BookSold;
             book.DiscountPercentage = dto.DiscountPercentage;
-            //book.BookReviewCount = dto.BookReviewCount;
             book.BookFinalPrice = dto.BookFinalPrice;
             book.IsOnSale = dto.IsOnSale;
             book.DiscountStartDate = dto.DiscountStartDate;
             book.DiscountEndDate = dto.DiscountEndDate;
 
+            // 🔄 Update image if uploaded
+            if (dto.ImageFile != null && dto.ImageFile.Length > 0)
+            {
+                using var memoryStream = new MemoryStream();
+                await dto.ImageFile.CopyToAsync(memoryStream);
+                book.ImageData = memoryStream.ToArray();
+            }
 
+            // 🔄 Update navigation properties
             book.Genres = dto.GenreIds != null && dto.GenreIds.Any()
                 ? await _context.Genres.Where(g => dto.GenreIds.Contains(g.GenreId)).ToListAsync()
                 : new List<Genre>();
@@ -479,10 +508,15 @@ namespace BookNest.Controllers
                 ? await _context.Badges.Where(b => dto.BadgeIds.Contains(b.BadgeId)).ToListAsync()
                 : new List<Badge>();
 
+            book.Author = dto.AuthorIds != null && dto.AuthorIds.Any()
+                ? await _context.Authors.Where(a => dto.AuthorIds.Contains(a.AuthorId)).ToListAsync()
+                : new List<Author>();
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(Guid id)
