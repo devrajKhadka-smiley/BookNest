@@ -231,8 +231,13 @@ namespace BookNest.Controllers
         }
 
         [HttpPost("ViewOrderByStaff")]
-        public async Task<IActionResult> ViewOrderByStaff([FromBody] string claimCode)
+        public async Task<IActionResult> ViewOrderByStaff([FromBody] ClaimCodeDto input)
         {
+            var claimCode = input.ClaimCode;
+
+            if (string.IsNullOrWhiteSpace(claimCode))
+                return BadRequest("Claim code is required.");
+
             var order = await _context.Orders
                 .Include(o => o.User)
                 .Include(o => o.OrderItems)
@@ -260,31 +265,29 @@ namespace BookNest.Controllers
                 Status = order.Status,
                 UserName = order.User.UserName,
                 Email = order.User.Email,
+                Memberid = order.MembershipId,
                 OrderDetails = orderDetails,
                 TotalAmount = order.TotalAmount
             });
         }
 
         [HttpPost("UpdateOrderStaff")]
-        public async Task<IActionResult> UpdateOrderStaff([FromBody] StaffOrderDto request)
+        public async Task<IActionResult> UpdateOrderStaff([FromBody] string claimCode)
         {
+            if (string.IsNullOrWhiteSpace(claimCode))
+                return BadRequest("Claim code is required.");
+
             var order = await _context.Orders
                 .Include(o => o.User)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Book)
-                .FirstOrDefaultAsync(o => o.Id == request.OrderId);
+                .FirstOrDefaultAsync(o => o.ClaimCode == claimCode);
 
             if (order == null)
                 return NotFound("Order not found");
 
             if (order.Status != "In Process")
                 return BadRequest("No active order found");
-
-            if (order.User.MemberShipId != request.MembershipId)
-                return BadRequest("Invalid Membership Id");
-
-            if (order.ClaimCode == null || order.ClaimCode != request.ClaimCode)
-                return BadRequest("Invalid or expired claim code");
 
             // Step 1: Validate stock for all books BEFORE confirming order
             foreach (var item in order.OrderItems)
@@ -332,12 +335,16 @@ namespace BookNest.Controllers
             });
         }
 
+
         [HttpPost("CancelOrderStaff")]
-        public async Task<IActionResult> CancelOrderStaff([FromBody] StaffOrderDto request)
+        public async Task<IActionResult> CancelOrderStaff([FromBody] string claimCode)
         {
+            if (string.IsNullOrWhiteSpace(claimCode))
+                return BadRequest("Claim code is required.");
+
             var order = await _context.Orders
-        .Include(o => o.User)
-        .FirstOrDefaultAsync(o => o.Id == request.OrderId);
+                .Include(o => o.User)
+                .FirstOrDefaultAsync(o => o.ClaimCode == claimCode);
 
             if (order == null)
                 return NotFound("Order not found");
@@ -345,16 +352,16 @@ namespace BookNest.Controllers
             if (order.Status != "In Process")
                 return BadRequest("No active order found");
 
-            if (order.User.MemberShipId != request.MembershipId)
-                return BadRequest("Invalid OTP / Claim Code.");
-
             order.Status = "Cancelled";
             order.OrderReceived = false;
             order.ClaimCode = null;
 
-            //order.User.SuccessfulOrderCount -= 1;
-            order.User.SuccessfulOrderCount -= 1;
-            Console.WriteLine("decereased successfulorder");
+            // Decrease successful order count only if it's > 0
+            if (order.User.SuccessfulOrderCount > 0)
+            {
+                order.User.SuccessfulOrderCount -= 1;
+                Console.WriteLine("Decreased SuccessfulOrderCount");
+            }
 
             await _context.SaveChangesAsync();
 
@@ -366,6 +373,7 @@ namespace BookNest.Controllers
                 Status = order.Status
             });
         }
+
 
 
         [HttpPost("CancelOrderUser")]
