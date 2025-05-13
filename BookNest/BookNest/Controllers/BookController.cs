@@ -352,7 +352,8 @@ namespace BookNest.Controllers
                 DiscountEndDate = book.DiscountEndDate,
                 BookDiscountedPrice = book.BookDiscountedPrice,
                 IsDeleted = book.IsDeleted,
-                DiscountPercentage = book.DiscountPercentage
+                DiscountPercentage = book.DiscountPercentage,
+                ImageBase64 = book.ImageData != null ? Convert.ToBase64String(book.ImageData) : null
             };
 
 
