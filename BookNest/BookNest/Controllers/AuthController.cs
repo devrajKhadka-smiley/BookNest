@@ -30,7 +30,7 @@ namespace BookNest.Controllers
             var existingUserByUsername = await userManager.FindByNameAsync(registeruserDto.UserName!);
             if (existingUserByUsername != null)
             {
-                return BadRequest(new { message = "Username already exists.😏" });
+                return BadRequest(new { message = "Username already exists!" });
             }
 
             var existingUserByEmail = await userManager.FindByEmailAsync(registeruserDto.Email!);
@@ -118,7 +118,7 @@ namespace BookNest.Controllers
                 });
             }
 
-            return Unauthorized(new { message = "Some credentials didn't match 😒." });
+            return Unauthorized(new { message = "Some credentials didn't match." });
         }
 
 
@@ -154,7 +154,7 @@ namespace BookNest.Controllers
             }
 
             return Unauthorized(new
-            { message = "Some credentials didn't match 😒." }
+            { message = "Some credentials didn't match." }
             );
         }
 
