@@ -85,14 +85,14 @@ namespace BookNest.Controllers
                     return BadRequest($"Insufficient stock for book: {book.BookTitle}");
 
                 totalBookCount += cartItem.Quantity;
-                var price = book.BookFinalPrice * cartItem.Quantity;
+                var price = book.BookDiscountedPrice * cartItem.Quantity;
                 totalPrice += price;
 
                 var orderItem = new OrderItem
                 {
                     BookId = book.BookId,
                     Quantity = cartItem.Quantity,
-                    PriceAtPurchase = book.BookFinalPrice,
+                    PriceAtPurchase = book.BookDiscountedPrice,
                     Order = order
                 };
 

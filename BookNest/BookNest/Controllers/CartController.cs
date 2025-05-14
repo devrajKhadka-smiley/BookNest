@@ -70,14 +70,14 @@ namespace BookNest.Controllers
         {
             var cart = await _context.Carts
                 .Include(c => c.Items)
-                .ThenInclude(ci => ci.Book)
-                .ThenInclude(b => b.Author)
-                .Include(ci => ci.Items)
-                .ThenInclude(ci => ci.Book)
-                .ThenInclude(b => b.Publication)
-                .Include(ci => ci.Items)
-                .ThenInclude(ci => ci.Book)
-                .ThenInclude(b => b.Genres)
+                    .ThenInclude(ci => ci.Book)
+                        .ThenInclude(b => b.Author)
+                .Include(c => c.Items)
+                    .ThenInclude(ci => ci.Book)
+                        .ThenInclude(b => b.Publication)
+                .Include(c => c.Items)
+                    .ThenInclude(ci => ci.Book)
+                        .ThenInclude(b => b.Genres)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (cart == null)
@@ -85,10 +85,17 @@ namespace BookNest.Controllers
                 return NotFound("Cart not found for this user.");
             }
 
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
             var cartDto = new
             {
                 cart.Id,
                 cart.CreatedAt,
+                SuccessfulOrders = user.SuccessfulOrderCount, // ✅ Added this
                 Items = cart.Items.Select(ci => new
                 {
                     ci.BookId,
@@ -100,12 +107,12 @@ namespace BookNest.Controllers
                     BookPublisher = ci.Book?.Publication?.PublicationName ?? "Unknown",
                     AuthorName = ci.Book?.Author?.FirstOrDefault()?.AuthorName ?? "Unknown",
                     ImageBase64 = ci.Book.ImageData != null ? Convert.ToBase64String(ci.Book.ImageData) : null
-
                 }).ToList()
             };
 
             return Ok(cartDto);
         }
+
 
         [HttpDelete("remove-from-cart/{userId}/{bookId}")]
         public async Task<IActionResult> RemoveFromCart(long userId, Guid bookId)
