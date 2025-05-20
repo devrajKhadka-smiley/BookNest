@@ -2,7 +2,7 @@
 {
     public class GenerateOtpService
     {
-        public static string GenerateOtp(int length = 4)
+        public static string GenerateOtp(int length = 6)
         {
             var random = new Random();
             var otp = string.Empty;

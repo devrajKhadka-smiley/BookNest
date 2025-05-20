@@ -1,6 +1,7 @@
 ﻿using BookNest.Data;
 using BookNest.Data.Entities;
 using BookNest.Models.Dto.Dashboard;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("overview")]
+        [Authorize(Roles = "Staff, Admin")]
         public async Task<IActionResult> GetSalesOverview()
         {
             var data = await _context.Orders
@@ -43,6 +45,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("statstabs")]
+        [Authorize(Roles = "Staff, Admin")]
         public async Task<IActionResult> GetStatisticsOverview()
         {
             // Pending Orders
@@ -76,6 +79,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("recent")]
+        [Authorize(Roles = "Staff, Admin")]
         public async Task<IActionResult> GetRecentOrders()
         {
             var recentOrders = await _context.Orders

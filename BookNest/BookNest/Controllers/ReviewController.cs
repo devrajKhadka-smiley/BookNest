@@ -1,6 +1,7 @@
 ﻿using BookNest.Data;
 using BookNest.Data.Entities;
 using BookNest.Models.Dto.Review;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Member")]
         public async Task<IActionResult> AddReview(CreateReviewDto dto)
         {
             var hasPurchased = await _context.Orders
@@ -66,6 +68,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("book/{bookId}")]
+        //[Authorize(Roles = "Member")]
         public async Task<IActionResult> GetReviewsForBook(Guid bookId)
         {
             var reviews = await _context.Reviews

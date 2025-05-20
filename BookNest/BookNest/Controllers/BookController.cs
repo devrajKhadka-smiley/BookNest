@@ -12,7 +12,6 @@ namespace BookNest.Controllers
     public class BookController : ControllerBase
     {
         private readonly AppDbContext _context;
-
         public BookController(AppDbContext context)
         {
             _context = context;
@@ -162,7 +161,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("adminGetAllBooks")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllAdmin()
         {
             var allBooks = await _context.Books
@@ -365,10 +364,6 @@ namespace BookNest.Controllers
                 DiscountStartDate = dto.DiscountStartDate,
                 DiscountEndDate = dto.DiscountEndDate,
                 BookAddedDate = DateTime.UtcNow,
-
-
-
-
             };
 
 
@@ -590,8 +585,8 @@ namespace BookNest.Controllers
 
             // Get 4 random featured books
             var randomFour = await query
-                .OrderBy(b => Guid.NewGuid()) // EF-safe randomness
-                .Take(4)
+                .OrderBy(b => Guid.NewGuid()) 
+                .Take(5)
                 .ToListAsync();
 
             var result = randomFour.Select(b => new FeaturedBookDto

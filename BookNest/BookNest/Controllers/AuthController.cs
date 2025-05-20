@@ -63,7 +63,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost("staffregister")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> StaffRegister(RegisterUserDto registeruserDto)
         {
             User user = new User

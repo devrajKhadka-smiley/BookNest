@@ -2,6 +2,7 @@
 using BookNest.Data.Entities;
 using BookNest.Models.Dto.Book;
 using BookNest.Models.Dto.Cart;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPost("add-to-cart/{userId}")]
+        [Authorize(Roles = "Member")]
         public async Task<IActionResult> AddToCart(long userId, [FromBody] CreateCartDto addToCartDTO)
         {
             if (addToCartDTO == null || addToCartDTO.Quantity <= 0)
@@ -66,6 +68,7 @@ namespace BookNest.Controllers
         }
 
         [HttpGet("{userId}")]
+        [Authorize(Roles = "Member")]
         public async Task<IActionResult> GetCart(long userId)
         {
             var cart = await _context.Carts
@@ -115,6 +118,7 @@ namespace BookNest.Controllers
 
 
         [HttpDelete("remove-from-cart/{userId}/{bookId}")]
+        [Authorize(Roles = "Member")]
         public async Task<IActionResult> RemoveFromCart(long userId, Guid bookId)
         {
             var cart = await _context.Carts
@@ -141,6 +145,7 @@ namespace BookNest.Controllers
         }
 
         [HttpPut("update-quantity/{userId}")]
+        [Authorize(Roles = "Member")]
         public async Task<IActionResult> UpdateCartItemQuantity(long userId, [FromBody] CartQuantityUpdateDto dto)
         {
             if (dto == null || dto.BookId == Guid.Empty || dto.Quantity <= 0)
